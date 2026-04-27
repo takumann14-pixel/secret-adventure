@@ -221,6 +221,51 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 .riding-sub{font-size:13px;color:rgba(255,255,255,.5);max-width:240px;line-height:1.6}
 .riding-btn{padding:14px 28px;border-radius:var(--rl);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:14px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
 
+
+/* ===== REVIEW SCREEN ===== */
+#s-review{background:var(--dark);overflow-y:auto;}
+.rev-header{padding:1.5rem 1.5rem 1rem;flex-shrink:0}
+.rev-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.rev-title{font-family:'Playfair Display',serif;font-size:22px;color:#fff;margin-bottom:4px}
+.rev-spot-name{font-size:14px;color:rgba(255,255,255,.5)}
+
+.rev-card{margin:0 1.25rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--rl);padding:1.25rem;display:flex;flex-direction:column;gap:1.25rem}
+
+.rev-stars{display:flex;gap:8px;justify-content:center}
+.star{font-size:36px;cursor:pointer;opacity:.3;transition:opacity .15s,transform .15s;-webkit-tap-highlight-color:transparent}
+.star.on{opacity:1}
+.star:active{transform:scale(1.2)}
+
+.rev-textarea{width:100%;padding:12px 14px;border-radius:var(--r);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;font-size:14px;font-family:inherit;resize:none;outline:none;line-height:1.5}
+.rev-textarea::placeholder{color:rgba(255,255,255,.3)}
+.rev-textarea:focus{border-color:rgba(255,255,255,.35)}
+
+.rev-submit{width:100%;padding:15px;background:var(--gold);color:var(--dark);border:none;border-radius:var(--rl);font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+.rev-submit:disabled{opacity:.4;cursor:default}
+.rev-skip{width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.4);border:none;font-size:13px;cursor:pointer;font-family:inherit}
+
+/* ===== REVIEWS LIST ===== */
+#s-reviews{background:var(--bg);overflow-y:auto;}
+.rvlist-header{background:var(--dark);padding:1.5rem 1.5rem 1.25rem;flex-shrink:0;display:flex;align-items:center;gap:12px}
+.rvlist-back{background:none;border:none;color:rgba(255,255,255,.6);font-size:22px;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+.rvlist-info{flex:1}
+.rvlist-title{font-family:'Playfair Display',serif;font-size:18px;color:#fff}
+.rvlist-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
+
+.rvlist-body{padding:1.25rem;display:flex;flex-direction:column;gap:12px}
+
+.rv-item{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--rl);padding:14px 16px}
+.rv-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.rv-spot-tag{font-size:11px;font-weight:500;color:var(--text2)}
+.rv-stars-sm{font-size:16px;letter-spacing:1px}
+.rv-comment{font-size:14px;color:var(--text);line-height:1.55;margin-bottom:8px}
+.rv-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
+.rv-empty{text-align:center;padding:3rem 1.5rem;color:var(--text3);font-size:14px;line-height:1.7}
+
+.rv-loading{text-align:center;padding:2rem;color:var(--text3);font-size:14px}
+
+/* arrived screen scroll fix */
+#s-arrived{overflow-y:auto;padding-bottom:1.5rem}
 </style>
 </head>
 <body>
@@ -325,7 +370,44 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
   <div class="arr-spot" id="arr-spot"></div>
   <div class="arr-hint"><div class="arr-hlabel" id="arr-hlabel">Insider tip</div><div class="arr-htext" id="arr-hint"></div></div>
   <div class="arr-sub" id="arr-sub">Look around — you're somewhere most people never find.</div>
-  <button class="arr-btn" onclick="goBack()" id="arr-btn">🗝️ Find another spot</button>
+  <button class="arr-btn" onclick="openReview()" id="arr-review-btn" style="background:var(--gold);color:var(--dark);border-color:var(--gold);">⭐ Leave a review</button>
+  <button class="arr-btn" onclick="openReviews()" id="arr-reviews-btn" style="margin-top:-.5rem">💬 See all reviews</button>
+  <button class="arr-btn" onclick="goBack()" id="arr-btn" style="margin-top:-.5rem">🗝️ Find another spot</button>
+</div>
+
+<!-- REVIEW INPUT -->
+<div class="screen" id="s-review">
+  <div class="rev-header">
+    <div class="rev-tag" id="rv-tag">Your review</div>
+    <div class="rev-title" id="rv-title">How was it?</div>
+    <div class="rev-spot-name" id="rv-spot-name"></div>
+  </div>
+  <div class="rev-card">
+    <div class="rev-stars" id="rv-stars">
+      <span class="star" data-v="1">⭐</span>
+      <span class="star" data-v="2">⭐</span>
+      <span class="star" data-v="3">⭐</span>
+      <span class="star" data-v="4">⭐</span>
+      <span class="star" data-v="5">⭐</span>
+    </div>
+    <textarea class="rev-textarea" id="rv-comment" rows="4" placeholder="Share your experience…"></textarea>
+    <button class="rev-submit" id="rv-submit" onclick="submitReview()" disabled>Send review</button>
+    <button class="rev-skip" onclick="showScreen('s-arrived')" id="rv-skip">Skip</button>
+  </div>
+</div>
+
+<!-- REVIEWS LIST -->
+<div class="screen" id="s-reviews">
+  <div class="rvlist-header">
+    <button class="rvlist-back" onclick="showScreen('s-arrived')">←</button>
+    <div class="rvlist-info">
+      <div class="rvlist-title" id="rvl-title">All reviews</div>
+      <div class="rvlist-sub" id="rvl-sub">Loading…</div>
+    </div>
+  </div>
+  <div class="rvlist-body" id="rvl-body">
+    <div class="rv-loading" id="rvl-loading">Loading reviews…</div>
+  </div>
 </div>
 
 </div>
@@ -345,6 +427,13 @@ var T = {
     arrTitle:'You made it!', arrHlabel:'Insider tip',
     arrSub:'Look around — you\'re somewhere most people never find.',
     arrBtn:'🗝️ Find another spot',
+    arrReviewBtn:'⭐ Leave a review',arrReviewsBtn:'💬 See all reviews',
+    rvTag:'Your review',rvTitle:'How was it?',rvPlaceholder:'Share your experience…',
+    rvSend:'Send review',rvSkip:'Skip',rvSending:'Sending…',rvThanks:'Thanks! 🎉',
+    rvListTitle:'All reviews',rvListSub:'{0} reviews · tap to filter by spot',
+    rvEmpty:'No reviews yet.\nBe the first to share!',rvLoading:'Loading reviews…',
+    rvCompanion:{solo:'Solo',couple:'Couple',friends:'Friends',family:'Family',kids:'With kids'},
+    rvVibe:{explore:'Explore',food:'Food',relax:'Chill',random:'Random'},
     dirNames:['North','Northeast','East','Southeast','South','Southwest','West','Northwest'],
     hints:['along the main road','past the convenience store','through the park path','along the river walk','keep going straight','turn right at the corner','take the narrow side street','follow the canal path'],
     walkTo:'Walk to {0} Station', walkSub:'{0} min · About {1}m from your location',
@@ -368,6 +457,13 @@ var T = {
     arrTitle:'到着しました！', arrHlabel:'地元のヒント',
     arrSub:'見回してみて。ほとんどの人が知らない場所にいます。',
     arrBtn:'🗝️ 別のスポットを探す',
+    arrReviewBtn:'⭐ レビューを書く',arrReviewsBtn:'💬 みんなの口コミを見る',
+    rvTag:'あなたのレビュー',rvTitle:'いかがでしたか？',rvPlaceholder:'体験をシェアしてください…',
+    rvSend:'レビューを送る',rvSkip:'スキップ',rvSending:'送信中…',rvThanks:'ありがとう！🎉',
+    rvListTitle:'みんなの口コミ',rvListSub:'{0}件のレビュー',
+    rvEmpty:'まだレビューがありません。\n最初の投稿者になりましょう！',rvLoading:'読み込み中…',
+    rvCompanion:{solo:'一人',couple:'カップル',friends:'友達',family:'家族',kids:'子ども連れ'},
+    rvVibe:{explore:'探索',food:'食事',relax:'のんびり',random:'サプライズ'},
     dirNames:['北','北東','東','南東','南','南西','西','北西'],
     hints:['大通りに沿って','コンビニを過ぎたところ','公園の小道を通って','川沿いに','まっすぐ進んで','角を右に曲がって','細い路地を進んで','運河沿いに'],
     walkTo:'{0}駅まで歩く', walkSub:'{0}分 · 現在地から約{1}m',
@@ -497,7 +593,19 @@ function applyLang(){
   document.getElementById('ch-sub').textContent=t.chSub;
   document.getElementById('lang-toggle').textContent=t.langToggle;
   document.getElementById('chat-input').placeholder=lang==='ja'?'メッセージを入力…':'Type a message…';
+  // review screen texts
+  var t=T[lang];
+  setIfExists('rv-tag',t.rvTag);
+  setIfExists('rv-title',t.rvTitle);
+  setIfExists('rv-submit',t.rvSend);
+  setIfExists('rv-skip',t.rvSkip);
+  setIfExists('rvl-title',t.rvListTitle);
+  var ia=document.getElementById('rv-comment');
+  if(ia) ia.placeholder=t.rvPlaceholder;
+  setIfExists('arr-review-btn',t.arrReviewBtn);
+  setIfExists('arr-reviews-btn',t.arrReviewsBtn);
 }
+function setIfExists(id,text){var el=document.getElementById(id);if(el)el.textContent=text;}
 function tx(key){return T[lang][key]||key;}
 
 // ============ GEO ============
@@ -995,6 +1103,8 @@ function showArrived(){
   document.getElementById('arr-hlabel').textContent=tx('arrHlabel');
   document.getElementById('arr-sub').textContent=tx('arrSub');
   document.getElementById('arr-btn').textContent=tx('arrBtn');
+  document.getElementById('arr-review-btn').textContent=tx('arrReviewBtn');
+  document.getElementById('arr-reviews-btn').textContent=tx('arrReviewsBtn');
   if(spot){
     var d=lang==='ja'?spot.ja:spot.en;
     document.getElementById('arr-spot').textContent=d.name;
@@ -1002,6 +1112,154 @@ function showArrived(){
   }
 }
 function goBack(){stopWatch();showScreen('s-chat');}
+
+// ============ REVIEW ============
+var GAS_URL='https://script.google.com/macros/s/AKfycbyWMOeiXV5lfY3ZIVm_-yxcaVD01qxYLgANQkFz3TQbHDOZ9lt9l_Nl7aN1W5CQdoWw/exec'; // ← あとでGoogle Apps ScriptのURLを貼る
+var selectedRating=0;
+
+function openReview(){
+  selectedRating=0;
+  document.querySelectorAll('.star').forEach(function(s){s.classList.remove('on');});
+  document.getElementById('rv-comment').value='';
+  document.getElementById('rv-submit').disabled=true;
+  document.getElementById('rv-submit').textContent=tx('rvSend');
+  if(spot){
+    var d=lang==='ja'?spot.ja:spot.en;
+    document.getElementById('rv-spot-name').textContent=d.name;
+  }
+  document.getElementById('rv-tag').textContent=tx('rvTag');
+  document.getElementById('rv-title').textContent=tx('rvTitle');
+  document.getElementById('rv-comment').placeholder=tx('rvPlaceholder');
+  document.getElementById('rv-submit').textContent=tx('rvSend');
+  document.getElementById('rv-skip').textContent=tx('rvSkip');
+  showScreen('s-review');
+
+  // star click
+  document.querySelectorAll('.star').forEach(function(star){
+    star.onclick=function(){
+      selectedRating=parseInt(this.dataset.v);
+      document.querySelectorAll('.star').forEach(function(s){
+        s.classList.toggle('on', parseInt(s.dataset.v)<=selectedRating);
+      });
+      document.getElementById('rv-submit').disabled=false;
+    };
+  });
+}
+
+function submitReview(){
+  if(!selectedRating) return;
+  var btn=document.getElementById('rv-submit');
+  btn.textContent=tx('rvSending');
+  btn.disabled=true;
+
+  var spotName=spot?(lang==='ja'?spot.ja.name:spot.en.name):'Unknown';
+  var payload={
+    spot: spotName,
+    vibe: prefs.vibe,
+    companion: prefs.companion,
+    rating: selectedRating,
+    comment: document.getElementById('rv-comment').value.trim(),
+    lang: lang
+  };
+
+  if(!GAS_URL){
+    // No URL set — save locally for demo
+    saveLocalReview(payload);
+    btn.textContent=tx('rvThanks');
+    setTimeout(function(){showScreen('s-arrived');},1200);
+    return;
+  }
+
+  fetch(GAS_URL, {
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(){
+    btn.textContent=tx('rvThanks');
+    saveLocalReview(payload); // cache locally too
+    setTimeout(function(){showScreen('s-arrived');},1200);
+  }).catch(function(){
+    btn.textContent=tx('rvThanks');
+    saveLocalReview(payload);
+    setTimeout(function(){showScreen('s-arrived');},1200);
+  });
+}
+
+// ── local storage fallback ──
+function saveLocalReview(payload){
+  try{
+    var reviews=JSON.parse(localStorage.getItem('sa_reviews')||'[]');
+    payload.timestamp=new Date().toISOString();
+    reviews.unshift(payload);
+    if(reviews.length>200) reviews=reviews.slice(0,200);
+    localStorage.setItem('sa_reviews',JSON.stringify(reviews));
+  }catch(e){}
+}
+function getLocalReviews(){
+  try{return JSON.parse(localStorage.getItem('sa_reviews')||'[]');}catch(e){return [];}
+}
+
+// ── reviews list ──
+function openReviews(){
+  showScreen('s-reviews');
+  document.getElementById('rvl-title').textContent=tx('rvListTitle');
+  document.getElementById('rvl-sub').textContent=tx('rvLoading');
+  document.getElementById('rvl-body').innerHTML='<div class="rv-loading">'+tx('rvLoading')+'</div>';
+
+  if(GAS_URL){
+    fetch(GAS_URL+'?action=get')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      // merge with local
+      var local=getLocalReviews();
+      var all=data.concat(local);
+      renderReviews(all);
+    })
+    .catch(function(){
+      renderReviews(getLocalReviews());
+    });
+  } else {
+    renderReviews(getLocalReviews());
+  }
+}
+
+function renderReviews(data){
+  var t=T[lang];
+  document.getElementById('rvl-sub').textContent=t.rvListSub.replace('{0}',data.length);
+  var body=document.getElementById('rvl-body');
+  if(!data.length){
+    body.innerHTML='<div class="rv-empty">'+t.rvEmpty.replace('\n','<br>')+'</div>';
+    return;
+  }
+  body.innerHTML='';
+  data.forEach(function(r){
+    var stars='';
+    for(var i=1;i<=5;i++) stars+=(i<=r.rating?'⭐':'☆');
+    var companion=t.rvCompanion[r.companion]||r.companion||'';
+    var vibe=t.rvVibe[r.vibe]||r.vibe||'';
+    var date=r.timestamp?new Date(r.timestamp).toLocaleDateString():'';
+    var comment=r.comment?(r.comment+''):'';
+    var div=document.createElement('div');
+    div.className='rv-item';
+    div.innerHTML=
+      '<div class="rv-top">'+
+        '<div class="rv-spot-tag">'+escHtml(r.spot||'')+'</div>'+
+        '<div class="rv-stars-sm">'+stars+'</div>'+
+      '</div>'+
+      (comment?'<div class="rv-comment">'+escHtml(comment)+'</div>':'')+
+      '<div class="rv-meta">'+
+        '<span>'+companion+'</span>'+
+        '<span>'+vibe+'</span>'+
+        (date?'<span>'+date+'</span>':'')+
+      '</div>';
+    body.appendChild(div);
+  });
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
