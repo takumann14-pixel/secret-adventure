@@ -1581,14 +1581,17 @@ function submitReview(){
 
   fetch(GAS_URL, {
     method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
+    mode:'cors',
+    headers:{'Content-Type':'text/plain'}, // Apps ScriptはJSONヘッダーでpreflightが発生するためtext/plainを使用
     body:JSON.stringify(payload)
-  }).then(function(){
+  }).then(function(r){ return r.json(); })
+  .then(function(res){
     btn.textContent=tx('rvThanks');
-    saveLocalReview(payload); // cache locally too
+    saveLocalReview(payload);
     setTimeout(function(){showScreen('s-arrived');},1200);
-  }).catch(function(){
+  }).catch(function(e){
+    console.warn('Review submit error:',e);
+    // GAS失敗時もローカル保存してUIは成功扱い
     btn.textContent=tx('rvThanks');
     saveLocalReview(payload);
     setTimeout(function(){showScreen('s-arrived');},1200);
@@ -1617,13 +1620,16 @@ function openReviews(){
   document.getElementById('rvl-body').innerHTML='<div class="rv-loading">'+tx('rvLoading')+'</div>';
 
   if(GAS_URL){
-    fetch(GAS_URL+'?action=get')
+    fetch(GAS_URL, {mode:'cors'})
     .then(function(r){return r.json();})
     .then(function(data){
-      // merge with local
       var local=getLocalReviews();
-      var all=data.concat(local);
-      renderReviews(all);
+      // 重複除去（localにあってGASにもあるものを除く）
+      var gasIds=data.map(function(r){return r.timestamp+r.comment;});
+      var uniqueLocal=local.filter(function(r){
+        return gasIds.indexOf(r.timestamp+r.comment)<0;
+      });
+      renderReviews(data.concat(uniqueLocal));
     })
     .catch(function(){
       renderReviews(getLocalReviews());
