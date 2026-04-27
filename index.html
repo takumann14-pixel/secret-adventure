@@ -266,6 +266,45 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 
 /* arrived screen scroll fix */
 #s-arrived{overflow-y:auto;padding-bottom:1.5rem}
+
+/* ===== COMPASS SENSOR ===== */
+.cmp-btn{
+  position:absolute;top:1rem;left:1rem;z-index:10;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
+  border-radius:22px;padding:7px 12px;
+  font-size:11px;color:rgba(255,255,255,.7);
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+  -webkit-tap-highlight-color:transparent;transition:all .2s;
+}
+.cmp-btn.active{background:rgba(74,222,128,.15);border-color:#4ADE80;color:#4ADE80;}
+.cmp-btn.denied{background:rgba(255,107,107,.12);border-color:#FF6B6B55;color:#FF6B6B;}
+.cmp-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* arrow: fast when compass on, smooth when GPS only */
+.big-arrow{transition:transform .45s cubic-bezier(.34,1.56,.64,1);}
+.big-arrow.live{transition:transform .1s linear;}
+
+/* ===== PLACES LOADING ===== */
+.places-overlay{
+  position:absolute;inset:0;background:var(--dark);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;z-index:20;
+}
+.places-overlay.hidden{display:none;}
+.places-spinner{
+  width:44px;height:44px;border:3px solid rgba(255,255,255,.1);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+.places-status{font-size:14px;color:rgba(255,255,255,.6);text-align:center;max-width:220px;line-height:1.5;}
+.places-err{font-size:13px;color:#FF6B6B;text-align:center;max-width:240px;line-height:1.5;}
+.places-err-btn{
+  margin-top:.5rem;padding:10px 22px;border-radius:var(--rl);
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  color:#fff;font-size:13px;cursor:pointer;font-family:inherit;
+}
+
 </style>
 </head>
 <body>
@@ -311,6 +350,12 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 
 <!-- NAV -->
 <div class="screen" id="s-nav">
+  <!-- Places loading overlay -->
+  <div class="places-overlay hidden" id="places-overlay">
+    <div class="places-spinner"></div>
+    <div class="places-status" id="places-status">Searching nearby spots…</div>
+  </div>
+
   <div class="nav-top">
     <div class="nav-dlabel" id="nav-dlabel">Secret destination</div>
     <div class="nav-dname" id="nav-dname">Secret spot ahead</div>
@@ -321,6 +366,12 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
     </div>
   </div>
   <div class="arrow-stage">
+    <!-- Compass permission button -->
+    <button class="cmp-btn" id="cmp-btn" onclick="requestCompass()">
+      <span class="cmp-dot"></span>
+      <span id="cmp-label">Enable compass</span>
+    </button>
+
     <svg class="c-ring" viewBox="0 0 60 60">
       <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
       <text x="30" y="11" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
@@ -818,19 +869,120 @@ function startAdventure(){
   lmt=setInterval(function(){lmi=(lmi+1)%msgs.length;document.getElementById('load-msg').textContent=msgs[lmi];},900);
   setTimeout(function(){
     clearInterval(lmt);
-    pickSpot();
-    if(prefs.transport==='transit')showTransit();else showNav();
+    pickSpot(function(){
+      if(prefs.transport==='transit')showTransit();else showNav();
+    });
   },2800);
 }
 
-function pickSpot(){
+// ======== PLACES API ========
+var PLACES_KEY='AIzaSyCzpdUU9rm_-z_O2XIGs5tOJeSl0o0ZUDA'; // ← ここにAPIキーを貼る
+
+// vibe × companion → Places API type list
+var PLACE_TYPES={
+  explore:{
+    solo:['tourist_attraction','shrine','temple','museum'],
+    couple:['tourist_attraction','art_gallery','park','shrine'],
+    friends:['tourist_attraction','amusement_park','night_club','museum'],
+    family:['tourist_attraction','park','aquarium','zoo'],
+    kids:['amusement_park','aquarium','zoo','park'],
+  },
+  food:{
+    solo:['cafe','bakery','restaurant','bar'],
+    couple:['restaurant','bar','cafe','bakery'],
+    friends:['restaurant','bar','night_club','izakaya_bar'],
+    family:['restaurant','cafe','bakery'],
+    kids:['cafe','bakery','restaurant'],
+  },
+  relax:{
+    solo:['park','library','spa','cafe'],
+    couple:['park','spa','art_gallery','cafe'],
+    friends:['park','spa','campground'],
+    family:['park','campground','spa'],
+    kids:['park','playground','amusement_park'],
+  },
+  random:{
+    solo:['point_of_interest','tourist_attraction','museum','art_gallery'],
+    couple:['point_of_interest','tourist_attraction','night_club','art_gallery'],
+    friends:['night_club','amusement_park','tourist_attraction','stadium'],
+    family:['zoo','aquarium','amusement_park','tourist_attraction'],
+    kids:['playground','amusement_park','aquarium','zoo'],
+  },
+};
+
+function getPlaceTypes(){
+  var v=PLACE_TYPES[prefs.vibe]||PLACE_TYPES.explore;
+  var types=v[prefs.companion]||v.solo;
+  // pick random type from list
+  return types[Math.floor(Math.random()*types.length)];
+}
+
+function pickSpot(callback){
+  if(!PLACES_KEY||PLACES_KEY==='YOUR_API_KEY'){
+    pickSpotFallback();
+    callback();
+    return;
+  }
+  // Show overlay
+  var ov=document.getElementById('places-overlay');
+  var st=document.getElementById('places-status');
+  ov.classList.remove('hidden');
+  st.textContent=lang==='ja'?'近くの場所を検索中…':'Searching nearby spots…';
+
+  var type=getPlaceTypes();
+  var radius=Math.min(prefs.distance*1000, 50000); // max 50km
+  var url='https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    +'?location='+userLat+','+userLng
+    +'&radius='+radius
+    +'&type='+type
+    +'&language='+(lang==='ja'?'ja':'en')
+    +'&key='+PLACES_KEY;
+
+  // Use proxy via cors-anywhere or direct (will fail CORS on some browsers)
+  // Recommended: use Places JS SDK instead
+  fetch('https://cors-anywhere.herokuapp.com/'+url)
+  .then(function(r){return r.json();})
+  .then(function(data){
+    ov.classList.add('hidden');
+    if(data.results&&data.results.length>0){
+      // Filter: skip chains/well-known, prefer lower rating count (hidden gems)
+      var results=data.results.filter(function(p){
+        return p.rating&&p.user_ratings_total<500; // hidden gem: fewer reviews
+      });
+      if(!results.length) results=data.results;
+      // Pick random from top results
+      var pick=results[Math.floor(Math.random()*Math.min(results.length,10))];
+      spot={
+        lat:pick.geometry.location.lat,
+        lng:pick.geometry.location.lng,
+        en:{name:pick.name,desc:pick.vicinity||'A hidden local spot',hint:'Rated '+pick.rating+'★ with '+pick.user_ratings_total+' reviews'},
+        ja:{name:pick.name,desc:pick.vicinity||'地元の隠れスポット',hint:'評価 '+pick.rating+'★（'+pick.user_ratings_total+'件）'},
+        placeId:pick.place_id,
+        photoRef:pick.photos?pick.photos[0].photo_reference:null,
+      };
+      callback();
+    } else {
+      pickSpotFallback();
+      callback();
+    }
+  })
+  .catch(function(e){
+    console.warn('Places API failed, using fallback',e);
+    ov.classList.add('hidden');
+    pickSpotFallback();
+    callback();
+  });
+}
+
+function pickSpotFallback(){
+  // original hand-curated spots
   var vibeSpots=SPOTS[prefs.vibe]||SPOTS.explore;
   var compSpots=vibeSpots[prefs.companion]||vibeSpots.solo||[];
-  // filter by distance
   var maxDelta=prefs.distance/111;
   var filtered=compSpots.filter(function(s){return Math.abs(s.dlat)<=maxDelta&&Math.abs(s.dlng)<=maxDelta;});
   var pool=filtered.length>0?filtered:compSpots;
-  spot=pool[Math.floor(Math.random()*pool.length)];
+  var s=pool[Math.floor(Math.random()*pool.length)];
+  spot=JSON.parse(JSON.stringify(s));
   spot.lat=userLat+spot.dlat;
   spot.lng=userLng+spot.dlng;
 }
@@ -847,16 +999,111 @@ function bear(a,b,c,d){
   return(Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
-// ============ NAV ============
+// ============ NAV + COMPASS ============
+var compassHeading=null;      // スマホが向いている方向(0-360, 北=0)
+var compassActive=false;
+var deviceOrientHandler=null;
+var destBearing=0;            // 目的地への方位角
+var simLat,simLng;
+
+// ---- コンパス許可ボタン ----
+function requestCompass(){
+  var btn=document.getElementById('cmp-btn');
+  var lbl=document.getElementById('cmp-label');
+  // iOS requires explicit permission request
+  if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+    DeviceOrientationEvent.requestPermission().then(function(state){
+      if(state==='granted'){
+        startCompass();
+      } else {
+        btn.className='cmp-btn denied';
+        lbl.textContent=lang==='ja'?'コンパス拒否':'Compass denied';
+      }
+    }).catch(function(){
+      btn.className='cmp-btn denied';
+      lbl.textContent=lang==='ja'?'コンパス拒否':'Compass denied';
+    });
+  } else {
+    // Android / non-iOS: try directly
+    startCompass();
+  }
+}
+
+function startCompass(){
+  var btn=document.getElementById('cmp-btn');
+  var lbl=document.getElementById('cmp-label');
+  if(deviceOrientHandler) window.removeEventListener('deviceorientation',deviceOrientHandler,true);
+  deviceOrientHandler=function(e){
+    var heading=null;
+    if(e.webkitCompassHeading!=null){
+      // iOS: webkitCompassHeading は真北からの時計回り
+      heading=e.webkitCompassHeading;
+    } else if(e.absolute&&e.alpha!=null){
+      // Android absolute
+      heading=(360-e.alpha)%360;
+    } else if(e.alpha!=null){
+      heading=(360-e.alpha)%360;
+    }
+    if(heading==null) return;
+    // smoothing
+    if(compassHeading==null){ compassHeading=heading; }
+    else {
+      var diff=heading-compassHeading;
+      if(diff>180) diff-=360;
+      if(diff<-180) diff+=360;
+      compassHeading=compassHeading+diff*0.25;
+      if(compassHeading<0) compassHeading+=360;
+      if(compassHeading>=360) compassHeading-=360;
+    }
+    compassActive=true;
+    btn.className='cmp-btn active';
+    lbl.textContent=lang==='ja'?'コンパス ON':'Compass ON';
+    document.getElementById('big-arrow').classList.add('live');
+    // update needle on compass ring
+    var needleAngle=compassHeading;
+    var nx=30+22*Math.sin(needleAngle*Math.PI/180);
+    var ny=30-22*Math.cos(needleAngle*Math.PI/180);
+    var needle=document.getElementById('c-needle');
+    if(needle){needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
+    // rotate arrow: target bearing minus phone heading
+    var arrowAngle=(destBearing-compassHeading+360)%360;
+    document.getElementById('big-arrow').style.transform='rotate('+arrowAngle+'deg)';
+  };
+  window.addEventListener('deviceorientation',deviceOrientHandler,true);
+  // test if events come within 1s
+  setTimeout(function(){
+    if(!compassActive){
+      btn.className='cmp-btn denied';
+      lbl.textContent=lang==='ja'?'センサーなし':'No sensor';
+      window.removeEventListener('deviceorientation',deviceOrientHandler,true);
+    }
+  },1500);
+}
+
+function stopCompass(){
+  if(deviceOrientHandler){window.removeEventListener('deviceorientation',deviceOrientHandler,true);deviceOrientHandler=null;}
+  compassActive=false;compassHeading=null;
+}
+
 function showNav(){
   document.getElementById('nav-dlabel').textContent=tx('navDlabel');
   document.getElementById('nav-dname').textContent=tx('navDname');
   document.getElementById('nav-stop').textContent=tx('navStop');
   document.getElementById('nav-here').textContent=tx('navHere');
   document.getElementById('nm-mode').textContent=prefs.transport==='cycling'?'🚲':'🚶';
+  // compass button label
+  var cmpLbl=document.getElementById('cmp-label');
+  if(cmpLbl) cmpLbl.textContent=lang==='ja'?'コンパスをONに':'Enable compass';
+
+  // Show spot name
+  if(spot){
+    var d=lang==='ja'?spot.ja:spot.en;
+    document.getElementById('nav-dname').textContent=d.name||tx('navDname');
+  }
+
   showScreen('s-nav');
-  updateNav(userLat,userLng);
   stopWatch();
+  updateNav(userLat,userLng);
   if(navigator.geolocation){
     watchId=navigator.geolocation.watchPosition(
       function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;updateNav(userLat,userLng);},
@@ -864,27 +1111,49 @@ function showNav(){
     );
   }else{startSim();}
 }
-var simLat,simLng;
-function startSim(){simLat=userLat;simLng=userLng;simTimer=setInterval(function(){var b=bear(simLat,simLng,spot.lat,spot.lng);simLat+=0.00025*Math.cos(b*Math.PI/180);simLng+=0.00025*Math.sin(b*Math.PI/180);updateNav(simLat,simLng);},1500);}
-function stopWatch(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}if(simTimer!==null){clearInterval(simTimer);simTimer=null;}}
+
+function startSim(){
+  simLat=userLat;simLng=userLng;
+  simTimer=setInterval(function(){
+    var b=bear(simLat,simLng,spot.lat,spot.lng);
+    simLat+=0.00025*Math.cos(b*Math.PI/180);
+    simLng+=0.00025*Math.sin(b*Math.PI/180);
+    updateNav(simLat,simLng);
+  },1500);
+}
+
+function stopWatch(){
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  if(simTimer!==null){clearInterval(simTimer);simTimer=null;}
+  stopCompass();
+}
 
 function updateNav(lat,lng){
   var dist=hav(lat,lng,spot.lat,spot.lng);
   var b=bear(lat,lng,spot.lat,spot.lng);
+  destBearing=b; // save for compass
   var spd=prefs.transport==='cycling'?14:4.5;
   var mins=Math.max(1,Math.round(dist/spd*60));
   var dirs=T[lang].dirNames;
   var hints=T[lang].hints;
-  document.getElementById('big-arrow').style.transform='rotate('+b+'deg)';
-  document.getElementById('dir-label').textContent=(lang==='ja'?'':'Head ')+dirs[Math.round(b/45)%8]+(lang==='ja'?'へ':'');
+  var dirIdx=Math.round(b/45)%8;
+
+  // Arrow: compass-adjusted if active, else GPS bearing
+  if(!compassActive){
+    document.getElementById('big-arrow').style.transform='rotate('+b+'deg)';
+    // compass ring needle points to target
+    var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);
+    var needle=document.getElementById('c-needle');
+    if(needle){needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
+  }
+  // (compass active → arrow updated by deviceorientation handler)
+
+  document.getElementById('dir-label').textContent=(lang==='ja'?'':'Head ')+dirs[dirIdx]+(lang==='ja'?'へ':'');
   document.getElementById('st-hint').textContent=hints[Math.floor(b/45)%8];
   document.getElementById('d-num').textContent=dist>1?dist.toFixed(1):Math.round(dist*1000);
   document.getElementById('d-unit').textContent=dist>1?'km':'m';
   document.getElementById('nm-dist').textContent='📍 '+dist.toFixed(2)+'km';
   document.getElementById('nm-time').textContent='⏱ ~'+mins+(lang==='ja'?'分':' min');
-  var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);
-  document.getElementById('c-needle').setAttribute('x2',nx.toFixed(1));
-  document.getElementById('c-needle').setAttribute('y2',ny.toFixed(1));
   if(dist<0.04)showArrived();
 }
 
