@@ -133,16 +133,30 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 .nav-dname{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:8px}
 .nav-meta{display:flex;gap:12px;flex-wrap:wrap}
 .nav-mi{font-size:13px;color:rgba(255,255,255,.5)}
-.arrow-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:5rem 1rem 1rem}
-.c-ring{position:absolute;top:1rem;left:1rem;width:60px;height:60px}
+.arrow-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:1rem}
 .d-badge{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:10px 14px;text-align:center}
 .d-num{font-size:24px;font-weight:500;color:var(--gold);line-height:1}
 .d-unit{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
-.arrow-wrap{display:flex;flex-direction:column;align-items:center;gap:1.25rem}
-.big-arrow{transition:transform .5s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 40px rgba(255,217,61,.25))}
-.arrow-svg{width:150px;height:150px}
+
+/* 中央コンパス+矢印の重ね合わせ */
+.nav-center{position:relative;display:flex;align-items:center;justify-content:center;width:260px;height:260px}
+.compass-bg{position:absolute;inset:0;transition:transform .12s linear;}
+.compass-bg svg{width:100%;height:100%;}
+.big-arrow{position:absolute;transition:transform .45s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 30px rgba(255,217,61,.35));}
+.big-arrow.live{transition:transform .1s linear;}
+.arrow-svg{width:110px;height:110px;}
+
+.nav-labels{display:flex;flex-direction:column;align-items:center;gap:.5rem;margin-top:1rem;}
 .dir-label{font-family:'Playfair Display',serif;font-size:24px;color:#fff}
 .st-hint{font-size:13px;color:rgba(255,255,255,.45);text-align:center;max-width:220px}
+
+/* コンパスステータス小表示（左上） */
+.cmp-status{position:absolute;top:.75rem;left:.75rem;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:1px;display:flex;align-items:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.cmp-status-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);flex-shrink:0;}
+.cmp-status.active .cmp-status-dot{background:#4ADE80;}
+.cmp-status.active{color:#4ADE80;}
+.cmp-status.denied .cmp-status-dot{background:#FF6B6B;}
+.cmp-status.denied{color:#FF6B6B;}
 .nav-bot{padding:1rem 1.5rem 1.5rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:12px;flex-shrink:0}
 .nbtn{flex:1;padding:14px;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:none;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
 .nbtn-stop{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
@@ -267,23 +281,6 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 /* arrived screen scroll fix */
 #s-arrived{overflow-y:auto;padding-bottom:1.5rem}
 
-/* ===== COMPASS SENSOR ===== */
-.cmp-btn{
-  position:absolute;top:1rem;left:1rem;z-index:10;
-  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);
-  border-radius:22px;padding:7px 12px;
-  font-size:11px;color:rgba(255,255,255,.7);
-  cursor:pointer;font-family:inherit;
-  display:flex;align-items:center;gap:6px;
-  -webkit-tap-highlight-color:transparent;transition:all .2s;
-}
-.cmp-btn.active{background:rgba(74,222,128,.15);border-color:#4ADE80;color:#4ADE80;}
-.cmp-btn.denied{background:rgba(255,107,107,.12);border-color:#FF6B6B55;color:#FF6B6B;}
-.cmp-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
-
-/* arrow: fast when compass on, smooth when GPS only */
-.big-arrow{transition:transform .45s cubic-bezier(.34,1.56,.64,1);}
-.big-arrow.live{transition:transform .1s linear;}
 
 /* ===== PLACES LOADING ===== */
 .places-overlay{
@@ -366,30 +363,79 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
     </div>
   </div>
   <div class="arrow-stage">
-    <!-- Compass permission button -->
-    <button class="cmp-btn" id="cmp-btn" onclick="requestCompass()">
-      <span class="cmp-dot"></span>
-      <span id="cmp-label">Enable compass</span>
-    </button>
+    <!-- compass status (tap to enable) -->
+    <div class="cmp-status" id="cmp-status" onclick="requestCompass()">
+      <span class="cmp-status-dot"></span>
+      <span id="cmp-label">Tap for compass</span>
+    </div>
 
-    <svg class="c-ring" viewBox="0 0 60 60">
-      <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-      <text x="30" y="11" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
-      <text x="30" y="53" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">S</text>
-      <text x="7"  y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">W</text>
-      <text x="53" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">E</text>
-      <line id="c-needle" x1="30" y1="30" x2="30" y2="8" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round"/>
-    </svg>
+    <!-- distance badge -->
     <div class="d-badge"><div class="d-num" id="d-num">—</div><div class="d-unit" id="d-unit">km</div></div>
-    <div class="arrow-wrap">
+
+    <!-- center: compass disc behind, arrow in front -->
+    <div class="nav-center">
+      <!-- compass disc — rotates opposite to phone heading -->
+      <div class="compass-bg" id="compass-bg">
+        <svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- outer ring -->
+          <circle cx="130" cy="130" r="126" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+          <circle cx="130" cy="130" r="118" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <!-- tick marks -->
+          <g stroke="rgba(255,255,255,0.2)" stroke-width="1">
+            <line x1="130" y1="8"   x2="130" y2="20"/>
+            <line x1="130" y1="240" x2="130" y2="252"/>
+            <line x1="8"   y1="130" x2="20"  y2="130"/>
+            <line x1="240" y1="130" x2="252" y2="130"/>
+          </g>
+          <!-- diagonal ticks -->
+          <g stroke="rgba(255,255,255,0.1)" stroke-width="1">
+            <line x1="222" y1="38"  x2="213" y2="47"/>
+            <line x1="38"  y1="38"  x2="47"  y2="47"/>
+            <line x1="222" y1="222" x2="213" y2="213"/>
+            <line x1="38"  y1="222" x2="47"  y2="213"/>
+          </g>
+          <!-- degree ticks (every 30deg) -->
+          <g stroke="rgba(255,255,255,0.12)" stroke-width="1">
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(30  130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(60  130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(120 130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(150 130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(210 130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(240 130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(300 130 130)"/>
+            <line x1="130" y1="8"   x2="130" y2="16"  transform="rotate(330 130 130)"/>
+          </g>
+          <!-- N S E W labels -->
+          <text x="130" y="34"  text-anchor="middle" font-size="16" font-weight="700" fill="#FF6B6B"  font-family="DM Sans">N</text>
+          <text x="130" y="238" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.5)" font-family="DM Sans">S</text>
+          <text x="236" y="135" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.5)" font-family="DM Sans">E</text>
+          <text x="24"  y="135" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.5)" font-family="DM Sans">W</text>
+          <!-- NE NW SE SW -->
+          <text x="203" y="60"  text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.25)" font-family="DM Sans">NE</text>
+          <text x="57"  y="60"  text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.25)" font-family="DM Sans">NW</text>
+          <text x="203" y="210" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.25)" font-family="DM Sans">SE</text>
+          <text x="57"  y="210" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.25)" font-family="DM Sans">SW</text>
+          <!-- center dot -->
+          <circle cx="130" cy="130" r="4" fill="rgba(255,255,255,0.15)"/>
+        </svg>
+      </div>
+
+      <!-- arrow — points to destination -->
       <div class="big-arrow" id="big-arrow">
         <svg class="arrow-svg" viewBox="0 0 150 150">
-          <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD93D"/><stop offset="100%" stop-color="#FF6B6B"/></linearGradient></defs>
+          <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#FFD93D"/>
+            <stop offset="100%" stop-color="#FF6B6B"/>
+          </linearGradient></defs>
           <polygon points="75,14 122,82 94,82 94,138 56,138 56,82 28,82" fill="url(#ag)"/>
         </svg>
       </div>
+    </div>
+
+    <!-- labels below -->
+    <div class="nav-labels">
       <div class="dir-label" id="dir-label">Calculating…</div>
-      <div class="st-hint" id="st-hint">Getting your heading</div>
+      <div class="st-hint"   id="st-hint">Getting your heading</div>
     </div>
   </div>
   <div class="nav-bot">
@@ -470,7 +516,7 @@ var T = {
     langToggle:'日本語',
     loadTitle:'Searching for secrets…',
     loadMsgs:['Scanning nearby hidden spots','Checking locals\' favourites','Avoiding tourist traps','Finding something special…'],
-    navDlabel:'Secret destination', navDname:'Secret spot ahead',
+    navDlabel:'Secret destination', navDname:'??? km ahead',
     navStop:'✕ Stop', navHere:'✓ I\'m here!',
     trDlabel:'Secret destination', trDname:'Secret spot',
     ttTot:'Total', ttXfr:'Transfers', ttWlk:'Walking',
@@ -500,7 +546,7 @@ var T = {
     langToggle:'English',
     loadTitle:'秘密の場所を探しています…',
     loadMsgs:['近くの隠れスポットをスキャン中','地元のお気に入りをチェック中','観光地を回避中','特別な場所を発見中…'],
-    navDlabel:'秘密の目的地', navDname:'秘密のスポットへ',
+    navDlabel:'秘密の目的地', navDname:'目的地は秘密 ???',
     navStop:'✕ 停止', navHere:'✓ 到着！',
     trDlabel:'秘密の目的地', trDname:'秘密のスポット',
     ttTot:'合計', ttXfr:'乗り換え', ttWlk:'徒歩',
@@ -876,7 +922,7 @@ function startAdventure(){
 }
 
 // ======== PLACES API ========
-var PLACES_KEY='AIzaSyCzpdUU9rm_-z_O2XIGs5tOJeSl0o0ZUDA'; // ← ここにAPIキーを貼る
+var PLACES_KEY='AIzaSyCzpdUU9rm_-z_O2XIGs5tOJeSl0o0ZUDA'; //
 
 // vibe × companion → Places API type list
 var PLACE_TYPES={
@@ -1006,74 +1052,68 @@ var deviceOrientHandler=null;
 var destBearing=0;            // 目的地への方位角
 var simLat,simLng;
 
-// ---- コンパス許可ボタン ----
+// ---- コンパス ----
 function requestCompass(){
-  var btn=document.getElementById('cmp-btn');
+  var st=document.getElementById('cmp-status');
   var lbl=document.getElementById('cmp-label');
-  // iOS requires explicit permission request
   if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
     DeviceOrientationEvent.requestPermission().then(function(state){
-      if(state==='granted'){
-        startCompass();
-      } else {
-        btn.className='cmp-btn denied';
-        lbl.textContent=lang==='ja'?'コンパス拒否':'Compass denied';
+      if(state==='granted'){ startCompass(); }
+      else {
+        st.className='cmp-status denied';
+        lbl.textContent=lang==='ja'?'コンパス拒否':'Denied';
       }
     }).catch(function(){
-      btn.className='cmp-btn denied';
-      lbl.textContent=lang==='ja'?'コンパス拒否':'Compass denied';
+      st.className='cmp-status denied';
+      lbl.textContent=lang==='ja'?'コンパス拒否':'Denied';
     });
   } else {
-    // Android / non-iOS: try directly
     startCompass();
   }
 }
 
 function startCompass(){
-  var btn=document.getElementById('cmp-btn');
+  var st=document.getElementById('cmp-status');
   var lbl=document.getElementById('cmp-label');
   if(deviceOrientHandler) window.removeEventListener('deviceorientation',deviceOrientHandler,true);
   deviceOrientHandler=function(e){
     var heading=null;
     if(e.webkitCompassHeading!=null){
-      // iOS: webkitCompassHeading は真北からの時計回り
-      heading=e.webkitCompassHeading;
+      heading=e.webkitCompassHeading;           // iOS: 真北基準
     } else if(e.absolute&&e.alpha!=null){
-      // Android absolute
-      heading=(360-e.alpha)%360;
+      heading=(360-e.alpha)%360;               // Android absolute
     } else if(e.alpha!=null){
       heading=(360-e.alpha)%360;
     }
     if(heading==null) return;
-    // smoothing
+    // スムージング
     if(compassHeading==null){ compassHeading=heading; }
     else {
       var diff=heading-compassHeading;
       if(diff>180) diff-=360;
       if(diff<-180) diff+=360;
-      compassHeading=compassHeading+diff*0.25;
+      compassHeading=compassHeading+diff*0.2;
       if(compassHeading<0) compassHeading+=360;
       if(compassHeading>=360) compassHeading-=360;
     }
     compassActive=true;
-    btn.className='cmp-btn active';
+    st.className='cmp-status active';
     lbl.textContent=lang==='ja'?'コンパス ON':'Compass ON';
     document.getElementById('big-arrow').classList.add('live');
-    // update needle on compass ring
-    var needleAngle=compassHeading;
-    var nx=30+22*Math.sin(needleAngle*Math.PI/180);
-    var ny=30-22*Math.cos(needleAngle*Math.PI/180);
-    var needle=document.getElementById('c-needle');
-    if(needle){needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
-    // rotate arrow: target bearing minus phone heading
+
+    // コンパス盤をスマホの向きと逆に回転（北が常に上に見える）
+    var compassBg=document.getElementById('compass-bg');
+    if(compassBg) compassBg.style.transform='rotate('+((-compassHeading+360)%360)+'deg)';
+
+    // 矢印 = 目的地方位 - スマホ向き
     var arrowAngle=(destBearing-compassHeading+360)%360;
     document.getElementById('big-arrow').style.transform='rotate('+arrowAngle+'deg)';
   };
   window.addEventListener('deviceorientation',deviceOrientHandler,true);
-  // test if events come within 1s
+  // 1.5秒後にセンサーが来なければ「センサーなし」
   setTimeout(function(){
     if(!compassActive){
-      btn.className='cmp-btn denied';
+      st.className='cmp-status denied';
       lbl.textContent=lang==='ja'?'センサーなし':'No sensor';
       window.removeEventListener('deviceorientation',deviceOrientHandler,true);
     }
@@ -1091,35 +1131,50 @@ function showNav(){
   document.getElementById('nav-stop').textContent=tx('navStop');
   document.getElementById('nav-here').textContent=tx('navHere');
   document.getElementById('nm-mode').textContent=prefs.transport==='cycling'?'🚲':'🚶';
-  // compass button label
+  // compass status label reset
+  var st=document.getElementById('cmp-status');
   var cmpLbl=document.getElementById('cmp-label');
-  if(cmpLbl) cmpLbl.textContent=lang==='ja'?'コンパスをONに':'Enable compass';
-
-  // Show spot name
-  if(spot){
-    var d=lang==='ja'?spot.ja:spot.en;
-    document.getElementById('nav-dname').textContent=d.name||tx('navDname');
-  }
+  if(st) st.className='cmp-status';
+  if(cmpLbl) cmpLbl.textContent=lang==='ja'?'タップしてコンパスON':'Tap for compass';
+  compassActive=false; compassHeading=null;
+  var cb=document.getElementById('compass-bg');
+  if(cb) cb.style.transform='rotate(0deg)';
 
   showScreen('s-nav');
   stopWatch();
   updateNav(userLat,userLng);
   if(navigator.geolocation){
+    var gpsRetries=0;
     watchId=navigator.geolocation.watchPosition(
-      function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;updateNav(userLat,userLng);},
-      function(){startSim();},{enableHighAccuracy:true,maximumAge:2000}
+      function(p){
+        gpsRetries=0;
+        userLat=p.coords.latitude;
+        userLng=p.coords.longitude;
+        updateNav(userLat,userLng);
+      },
+      function(err){
+        gpsRetries++;
+        // エラーが続く場合のみ静止表示（シミュレーション移動はしない）
+        if(gpsRetries>=3){
+          startSim();
+        }
+      },
+      {enableHighAccuracy:true,maximumAge:3000,timeout:10000}
     );
-  }else{startSim();}
+  } else {
+    startSim();
+  }
 }
 
 function startSim(){
-  simLat=userLat;simLng=userLng;
-  simTimer=setInterval(function(){
-    var b=bear(simLat,simLng,spot.lat,spot.lng);
-    simLat+=0.00025*Math.cos(b*Math.PI/180);
-    simLng+=0.00025*Math.sin(b*Math.PI/180);
-    updateNav(simLat,simLng);
-  },1500);
+  // GPS失敗時: シミュレーション移動はしない。
+  // 代わりに現在地で静止したまま方向だけ表示する。
+  if(userLat&&spot){
+    updateNav(userLat,userLng);
+    // ヒント表示
+    var hint=document.getElementById('st-hint');
+    if(hint) hint.textContent=lang==='ja'?'GPS信号を待機中…':'Waiting for GPS signal…';
+  }
 }
 
 function stopWatch(){
@@ -1138,15 +1193,13 @@ function updateNav(lat,lng){
   var hints=T[lang].hints;
   var dirIdx=Math.round(b/45)%8;
 
-  // Arrow: compass-adjusted if active, else GPS bearing
+  // Arrow: compassOFF → 北基準で矢印回転、compassON → deviceorientationハンドラが処理
   if(!compassActive){
     document.getElementById('big-arrow').style.transform='rotate('+b+'deg)';
-    // compass ring needle points to target
-    var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);
-    var needle=document.getElementById('c-needle');
-    if(needle){needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
+    // コンパス盤はGPS方位の逆に回転して北を上に保つ
+    var cb=document.getElementById('compass-bg');
+    if(cb) cb.style.transform='rotate(0deg)'; // GPSのみ時は盤は固定(北=上)
   }
-  // (compass active → arrow updated by deviceorientation handler)
 
   document.getElementById('dir-label').textContent=(lang==='ja'?'':'Head ')+dirs[dirIdx]+(lang==='ja'?'へ':'');
   document.getElementById('st-hint').textContent=hints[Math.floor(b/45)%8];
@@ -1154,6 +1207,12 @@ function updateNav(lat,lng){
   document.getElementById('d-unit').textContent=dist>1?'km':'m';
   document.getElementById('nm-dist').textContent='📍 '+dist.toFixed(2)+'km';
   document.getElementById('nm-time').textContent='⏱ ~'+mins+(lang==='ja'?'分':' min');
+  // nav-dname: 距離だけ表示して目的地名は隠す
+  var dname=document.getElementById('nav-dname');
+  if(dname){
+    var distTxt=dist>1?dist.toFixed(1)+'km':Math.round(dist*1000)+'m';
+    dname.textContent=lang==='ja'?distTxt+' 先に秘密の場所':distTxt+' to your secret spot';
+  }
   if(dist<0.04)showArrived();
 }
 
@@ -1337,13 +1396,12 @@ function startTrWalkWatch(target,onArrive){
   } else { startTrSim(target,onArrive); }
 }
 function startTrSim(target,onArrive){
-  trSimLat2=userLat;trSimLng2=userLng;
-  simTimer=setInterval(function(){
-    var b=bear(trSimLat2,trSimLng2,target.lat,target.lng);
-    trSimLat2+=0.00025*Math.cos(b*Math.PI/180);
-    trSimLng2+=0.00025*Math.sin(b*Math.PI/180);
-    trUpdateWalk(trSimLat2,trSimLng2,target,onArrive);
-  },1500);
+  // GPS失敗時もシミュレーション移動はしない。現在地で静止表示のみ。
+  if(userLat&&target){
+    trUpdateWalk(userLat,userLng,target,onArrive);
+    var hint=document.getElementById('tr-hint');
+    if(hint) hint.textContent=lang==='ja'?'GPS信号を待機中…':'Waiting for GPS signal…';
+  }
 }
 function trUpdateWalk(lat,lng,target,onArrive){
   var dist=hav(lat,lng,target.lat,target.lng);
