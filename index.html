@@ -3,358 +3,263 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Secret Adventure</title>
+<title>Secret Adventure / 秘密の冒険</title>
 <meta name="theme-color" content="#0F0E17">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FAFAF8;--bg2:#F2F0EB;--bg3:#E8E6DF;
+  --text:#1A1A1A;--text2:#666;--text3:#999;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.2);
+  --dark:#0F0E17;--gold:#FFD93D;--red:#FF6B6B;--green:#4ADE80;
+  --r:12px;--rl:18px;
+  --font:'DM Sans',sans-serif;
+}
+html{height:100%}
+body{min-height:100vh;font-family:var(--font);background:var(--dark);color:var(--text)}
+body.ja{font-family:'Noto Sans JP',sans-serif}
 
-:root {
-  --bg: #FAFAF8; --bg2: #F2F0EB;
-  --text: #1A1A1A; --text2: #666; --text3: #999;
-  --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.2);
-  --dark: #0F0E17; --gold: #FFD93D; --red: #FF6B6B;
-  --r: 12px; --rl: 18px;
-}
+.shell{min-height:100vh;max-width:430px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
 
-html { height: 100%; }
-body {
-  min-height: 100vh;
-  font-family: 'DM Sans', sans-serif;
-  background: var(--dark);
-  color: var(--text);
+/* ===== LANG SELECT ===== */
+#s-lang{background:var(--dark);align-items:center;justify-content:center;gap:2rem;padding:2rem}
+.lang-logo{font-family:'Playfair Display',serif;font-size:28px;color:#fff;text-align:center;line-height:1.3}
+.lang-sub{font-size:13px;color:rgba(255,255,255,.45);text-align:center;margin-top:.5rem}
+.lang-btns{display:flex;flex-direction:column;gap:12px;width:100%;max-width:260px}
+.lang-btn{
+  padding:16px 24px;border-radius:var(--rl);border:1.5px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.07);color:#fff;font-size:16px;font-weight:500;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;
+  font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent;
 }
+.lang-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+.lang-flag{font-size:24px}
 
-.shell {
-  min-height: 100vh;
-  max-width: 430px;
-  margin: 0 auto;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
+/* ===== CHAT ===== */
+#s-chat{background:var(--bg)}
+.chat-header{
+  background:var(--dark);padding:1.25rem 1.5rem;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
 }
-
-/* ---- SCREENS: show/hide with display ---- */
-.screen { display: none; flex-direction: column; min-height: 100vh; }
-.screen.active { display: flex; }
-
-/* ======== SETUP ======== */
-#s-setup { background: var(--bg); }
-
-.hero {
-  background: var(--dark);
-  padding: 3rem 1.5rem 2rem;
-  position: relative; overflow: hidden; flex-shrink: 0;
+.chat-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
 }
-.hero::before {
-  content:''; position:absolute; top:-80px; right:-80px;
-  width:240px; height:240px; border-radius:50%; background:rgba(255,107,107,0.12);
-}
-.hero-tag {
-  font-size:10px; letter-spacing:3px; color:var(--gold);
-  font-weight:500; margin-bottom:10px; text-transform:uppercase;
-  position:relative; z-index:1;
-}
-.hero-title {
-  font-family:'Playfair Display',serif; font-size:34px; color:#FFFFFE;
-  line-height:1.15; margin-bottom:8px; position:relative; z-index:1;
-}
-.hero-sub { font-size:14px; color:rgba(255,255,255,0.45); position:relative; z-index:1; }
-
-.loc-bar {
-  position:relative; z-index:1; margin-top:1.25rem;
-  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px; padding:10px 14px;
-  display:flex; align-items:center; gap:10px;
-}
-.loc-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.loc-dot.searching { background:var(--gold); animation:blink 1.4s ease-in-out infinite; }
-.loc-dot.ready     { background:#4ADE80; }
-.loc-dot.error     { background:var(--red); }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-.loc-text { font-size:12px; color:rgba(255,255,255,0.6); }
-
-.setup-body {
-  padding:1.75rem 1.5rem;
-  display:flex; flex-direction:column; gap:1.5rem; flex:1;
-}
-.flabel {
-  font-size:10px; font-weight:500; letter-spacing:1.5px;
-  text-transform:uppercase; color:var(--text3); margin-bottom:10px; display:block;
-}
-.chips { display:flex; gap:8px; flex-wrap:wrap; }
-.chip {
-  padding:9px 16px; border-radius:100px; border:1px solid var(--border2);
-  font-size:13px; cursor:pointer; background:var(--bg); color:var(--text);
-  transition:all 0.15s; display:flex; align-items:center; gap:6px;
-  -webkit-tap-highlight-color:transparent;
-}
-.chip.on { background:var(--dark); color:#fff; border-color:var(--dark); }
-
-.slider-row { display:flex; align-items:center; gap:12px; }
-.slider-row input[type=range] {
-  flex:1; height:4px; -webkit-appearance:none; appearance:none;
-  background:var(--border2); border-radius:2px; outline:none;
-}
-.slider-row input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
-  background:var(--dark); cursor:pointer; border:3px solid var(--bg);
-  box-shadow:0 0 0 1px var(--dark);
-}
-.sval { font-size:14px; font-weight:500; min-width:52px; text-align:right; }
-
-.vgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.vcard {
-  border:1px solid var(--border); border-radius:var(--r);
-  padding:14px; cursor:pointer; background:var(--bg2);
-  transition:all 0.15s; -webkit-tap-highlight-color:transparent;
-}
-.vcard.on { border-color:var(--dark); background:#fff; }
-.vemoji { font-size:24px; margin-bottom:6px; }
-.vname  { font-size:14px; font-weight:500; color:var(--text); }
-.vdesc  { font-size:11px; color:var(--text3); margin-top:2px; }
-
-.go-btn {
-  width:100%; padding:17px; background:var(--dark); color:#fff;
-  border:none; border-radius:var(--rl); font-size:16px; font-weight:500;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  gap:10px; font-family:'DM Sans',sans-serif; margin-top:0.5rem;
-  -webkit-tap-highlight-color:transparent;
+.chat-hinfo{}
+.chat-hname{font-size:15px;font-weight:500;color:#fff}
+.chat-hsub{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.chat-lang-toggle{
+  margin-left:auto;padding:5px 12px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.2);background:transparent;
+  color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
 }
 
-/* ======== LOADING ======== */
-#s-loading {
-  background:var(--dark); align-items:center;
-  justify-content:center; gap:2rem;
-}
-.compass {
-  width:90px; height:90px; border:1.5px solid rgba(255,255,255,0.12);
-  border-radius:50%; position:relative; animation:spin 3s linear infinite;
-}
-.compass::before {
-  content:''; position:absolute; top:50%; left:50%;
-  width:2px; height:34px; background:var(--red);
-  transform:translate(-50%,-100%); transform-origin:bottom; border-radius:1px;
-}
-.compass::after {
-  content:''; position:absolute; top:50%; left:50%;
-  width:2px; height:24px; background:rgba(255,255,255,0.3);
-  transform:translate(-50%,0); transform-origin:top; border-radius:1px;
-}
-@keyframes spin { to{transform:rotate(360deg)} }
-.load-title { font-family:'Playfair Display',serif; font-size:24px; color:#fff; text-align:center; }
-.dots { display:flex; justify-content:center; gap:6px; margin-top:14px; }
-.dots span {
-  width:6px; height:6px; background:var(--gold); border-radius:50%;
-  animation:dp 1.2s ease-in-out infinite;
-}
-.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
-@keyframes dp { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
-.load-sub { font-size:14px; color:rgba(255,255,255,.5); text-align:center; margin-top:8px; }
+.chat-body{flex:1;overflow-y:auto;padding:1.25rem;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
 
-/* ======== NAV (walk/cycle) ======== */
-#s-nav { background:var(--dark); }
+.msg{display:flex;gap:8px;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.bot{align-items:flex-end}
+.msg.user{align-items:flex-end;flex-direction:row-reverse}
+.msg-av{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.bubble{
+  max-width:78%;padding:11px 14px;border-radius:18px;
+  font-size:14px;line-height:1.55;
+}
+.bot .bubble{background:#fff;border:0.5px solid var(--border);border-bottom-left-radius:4px;color:var(--text)}
+.user .bubble{background:var(--dark);color:#fff;border-bottom-right-radius:4px}
 
-.nav-top {
-  padding:1.5rem 1.5rem 1rem;
-  border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0;
-}
-.nav-dlabel { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:4px; }
-.nav-dname  { font-family:'Playfair Display',serif; font-size:22px; color:#fff; margin-bottom:8px; }
-.nav-meta   { display:flex; gap:14px; flex-wrap:wrap; }
-.nav-mi     { font-size:13px; color:rgba(255,255,255,.5); }
+.typing-bubble{background:#fff;border:0.5px solid var(--border);border-bottom-left-radius:4px;padding:12px 16px;border-radius:18px;display:flex;gap:5px;align-items:center}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:tdot 1.2s ease-in-out infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
 
-.arrow-stage {
-  flex:1; display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  position:relative; padding:5rem 1rem 1rem;
+.options-row{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 4px 40px}
+.opt-btn{
+  padding:8px 14px;border-radius:100px;
+  border:1.5px solid var(--border2);background:var(--bg);
+  font-size:13px;cursor:pointer;color:var(--text);
+  font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;gap:6px;
 }
-.c-ring { position:absolute; top:1rem; left:1rem; width:60px; height:60px; }
-.d-badge {
-  position:absolute; top:1rem; right:1rem;
-  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
-  border-radius:var(--r); padding:10px 14px; text-align:center;
-}
-.d-num  { font-size:24px; font-weight:500; color:var(--gold); line-height:1; }
-.d-unit { font-size:11px; color:rgba(255,255,255,.35); margin-top:3px; }
+.opt-btn:hover{border-color:var(--dark);background:#fff}
+.opt-btn.selected{background:var(--dark);color:#fff;border-color:var(--dark)}
 
-.arrow-wrap { display:flex; flex-direction:column; align-items:center; gap:1.25rem; }
-.big-arrow  { transition:transform .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 0 40px rgba(255,217,61,.25)); }
-.arrow-svg  { width:150px; height:150px; }
-.dir-label  { font-family:'Playfair Display',serif; font-size:24px; color:#fff; }
-.st-hint    { font-size:13px; color:rgba(255,255,255,.45); text-align:center; max-width:220px; }
+.chat-input-area{
+  padding:1rem 1.25rem 1.5rem;
+  border-top:0.5px solid var(--border);
+  display:flex;gap:10px;align-items:flex-end;
+  flex-shrink:0;background:var(--bg);
+}
+.chat-input{
+  flex:1;padding:10px 14px;border-radius:22px;
+  border:1px solid var(--border2);background:#fff;
+  font-size:14px;font-family:inherit;color:var(--text);
+  outline:none;resize:none;max-height:100px;
+  -webkit-appearance:none;
+}
+.chat-input:focus{border-color:var(--dark)}
+.chat-send{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--dark);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;
+  transition:opacity .15s;
+}
+.chat-send:hover{opacity:.8}
+.send-icon{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-.nav-bot {
-  padding:1rem 1.5rem 1.5rem;
-  border-top:1px solid rgba(255,255,255,.07);
-  display:flex; gap:12px; flex-shrink:0;
-}
-.nbtn {
-  flex:1; padding:14px; border-radius:var(--r); font-size:14px; font-weight:500;
-  cursor:pointer; font-family:'DM Sans',sans-serif; border:none;
-  display:flex; align-items:center; justify-content:center; gap:6px;
-  -webkit-tap-highlight-color:transparent;
-}
-.nbtn-stop    { background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); }
-.nbtn-arrived { background:var(--red); color:#fff; }
+/* ===== LOADING ===== */
+#s-loading{background:var(--dark);align-items:center;justify-content:center;gap:2rem}
+.compass{width:90px;height:90px;border:1.5px solid rgba(255,255,255,.12);border-radius:50%;position:relative;animation:spin 3s linear infinite}
+.compass::before{content:'';position:absolute;top:50%;left:50%;width:2px;height:34px;background:var(--red);transform:translate(-50%,-100%);transform-origin:bottom;border-radius:1px}
+.compass::after{content:'';position:absolute;top:50%;left:50%;width:2px;height:24px;background:rgba(255,255,255,.3);transform:translate(-50%,0);transform-origin:top;border-radius:1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-family:'Playfair Display',serif;font-size:24px;color:#fff;text-align:center}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:14px}
+.dots span{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:dp 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.load-sub{font-size:14px;color:rgba(255,255,255,.5);text-align:center;margin-top:8px}
 
-/* ======== TRANSIT ======== */
-#s-transit { background:var(--bg); }
+/* ===== NAV ===== */
+#s-nav{background:var(--dark)}
+.nav-top{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.nav-dlabel{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px}
+.nav-dname{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:8px}
+.nav-meta{display:flex;gap:12px;flex-wrap:wrap}
+.nav-mi{font-size:13px;color:rgba(255,255,255,.5)}
+.arrow-stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:5rem 1rem 1rem}
+.c-ring{position:absolute;top:1rem;left:1rem;width:60px;height:60px}
+.d-badge{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:10px 14px;text-align:center}
+.d-num{font-size:24px;font-weight:500;color:var(--gold);line-height:1}
+.d-unit{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
+.arrow-wrap{display:flex;flex-direction:column;align-items:center;gap:1.25rem}
+.big-arrow{transition:transform .5s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 40px rgba(255,217,61,.25))}
+.arrow-svg{width:150px;height:150px}
+.dir-label{font-family:'Playfair Display',serif;font-size:24px;color:#fff}
+.st-hint{font-size:13px;color:rgba(255,255,255,.45);text-align:center;max-width:220px}
+.nav-bot{padding:1rem 1.5rem 1.5rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:12px;flex-shrink:0}
+.nbtn{flex:1;padding:14px;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:none;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
+.nbtn-stop{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.nbtn-arrived{background:var(--red);color:#fff}
 
-.tr-header { background:var(--dark); padding:2rem 1.5rem 1.25rem; flex-shrink:0; }
-.tr-dlabel { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:4px; }
-.tr-dname  { font-family:'Playfair Display',serif; font-size:22px; color:#fff; margin-bottom:14px; }
-.tr-summ   { display:flex; gap:1px; background:rgba(255,255,255,.08); border-radius:var(--r); overflow:hidden; }
-.tsi { flex:1; padding:12px; background:rgba(255,255,255,.05); text-align:center; }
-.tsi-val { font-size:20px; font-weight:500; color:#fff; }
-.tsi-lab { font-size:10px; color:rgba(255,255,255,.4); margin-top:2px; }
+/* ===== TRANSIT ===== */
+#s-transit{background:var(--bg)}
+.tr-header{background:var(--dark);padding:2rem 1.5rem 1.25rem;flex-shrink:0}
+.tr-dlabel{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px}
+.tr-dname{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:14px}
+.tr-summ{display:flex;gap:1px;background:rgba(255,255,255,.08);border-radius:var(--r);overflow:hidden}
+.tsi{flex:1;padding:12px;background:rgba(255,255,255,.05);text-align:center}
+.tsi-val{font-size:20px;font-weight:500;color:#fff}
+.tsi-lab{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.tr-body{padding:1.5rem;flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.tstep{display:flex;gap:14px;position:relative;padding-bottom:1.25rem}
+.tstep-line{position:absolute;left:19px;top:42px;bottom:0;width:2px;background:var(--border)}
+.ticon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;position:relative;z-index:1}
+.ticon.walk{background:rgba(255,217,61,.12);border:1px solid rgba(255,217,61,.3)}
+.ticon.dest{background:rgba(255,107,107,.12);border:2px solid var(--red)}
+.ticon.train{border:2px solid}
+.tc{flex:1}.tc-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px}.tc-sub{font-size:12px;color:var(--text2);line-height:1.5}
+.lpill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;font-size:12px;font-weight:500;margin-top:8px}
+.ldot{width:8px;height:8px;border-radius:50%}
+.scard{margin-top:8px;border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+.sname{font-size:15px;font-weight:500;color:var(--text)}.sref{font-size:11px;color:var(--text3);margin-top:2px}
+.sbadge{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:500}
+.bon{background:#D1F4E7;color:#0A6640}.boff{background:#FFE0E0;color:#8B2020}
+.tr-foot{padding:1rem 1.5rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:12px;flex-shrink:0;background:var(--bg)}
+.tbtn{flex:1;padding:14px;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:none;display:flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
+.tbtn-back{background:var(--bg2);color:var(--text);border:1px solid var(--border2)}.tbtn-go{background:var(--dark);color:#fff}
 
-.tr-body { padding:1.5rem; flex:1; overflow-y:auto; display:flex; flex-direction:column; }
-
-.tstep { display:flex; gap:14px; position:relative; padding-bottom:1.25rem; }
-.tstep-line {
-  position:absolute; left:19px; top:42px; bottom:0; width:2px;
-  background:var(--border);
-}
-.ticon {
-  width:40px; height:40px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:17px; flex-shrink:0; position:relative; z-index:1;
-}
-.ticon.walk { background:rgba(255,217,61,.12); border:1px solid rgba(255,217,61,.3); }
-.ticon.dest { background:rgba(255,107,107,.12); border:2px solid var(--red); }
-.ticon.train { border:2px solid; }
-
-.tc { flex:1; }
-.tc-title { font-size:15px; font-weight:500; color:var(--text); margin-bottom:2px; }
-.tc-sub   { font-size:12px; color:var(--text2); line-height:1.5; }
-.lpill {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:4px 10px; border-radius:100px;
-  font-size:12px; font-weight:500; margin-top:8px;
-}
-.ldot { width:8px; height:8px; border-radius:50%; }
-.scard {
-  margin-top:8px; border:1px solid var(--border);
-  border-radius:var(--r); padding:12px 14px;
-  display:flex; align-items:center; justify-content:space-between;
-  background:var(--bg2);
-}
-.sname { font-size:15px; font-weight:500; color:var(--text); }
-.sref  { font-size:11px; color:var(--text3); margin-top:2px; }
-.sbadge { padding:5px 12px; border-radius:100px; font-size:11px; font-weight:500; }
-.bon  { background:#D1F4E7; color:#0A6640; }
-.boff { background:#FFE0E0; color:#8B2020; }
-
-.tr-foot {
-  padding:1rem 1.5rem 1.5rem;
-  border-top:1px solid var(--border);
-  display:flex; gap:12px; flex-shrink:0; background:var(--bg);
-}
-.tbtn {
-  flex:1; padding:14px; border-radius:var(--r); font-size:14px; font-weight:500;
-  cursor:pointer; font-family:'DM Sans',sans-serif; border:none;
-  display:flex; align-items:center; justify-content:center; gap:6px;
-  -webkit-tap-highlight-color:transparent;
-}
-.tbtn-back { background:var(--bg2); color:var(--text); border:1px solid var(--border2); }
-.tbtn-go   { background:var(--dark); color:#fff; }
-
-/* ======== ARRIVED ======== */
-#s-arrived {
-  background:var(--dark); align-items:center;
-  justify-content:center; gap:1.5rem; padding:2rem; text-align:center;
-}
-.arr-emoji { font-size:64px; animation:popIn .6s cubic-bezier(.34,1.56,.64,1); }
-@keyframes popIn { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
-.arr-title { font-family:'Playfair Display',serif; font-size:30px; color:#fff; }
-.arr-spot  { font-size:17px; color:var(--gold); font-weight:500; }
-.arr-hint  {
-  background:rgba(255,217,61,.08); border:1px solid rgba(255,217,61,.2);
-  border-radius:var(--rl); padding:16px 20px; max-width:300px; text-align:left;
-}
-.arr-hlabel { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
-.arr-htext  { font-size:14px; color:rgba(255,255,255,.7); line-height:1.6; }
-.arr-sub { font-size:13px; color:rgba(255,255,255,.35); max-width:240px; line-height:1.6; }
-.arr-btn {
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
-  color:#fff; padding:14px 28px; border-radius:var(--rl);
-  font-size:15px; cursor:pointer; font-family:'DM Sans',sans-serif;
-  -webkit-tap-highlight-color:transparent;
-}
+/* ===== ARRIVED ===== */
+#s-arrived{background:var(--dark);align-items:center;justify-content:center;gap:1.5rem;padding:2rem;text-align:center}
+.arr-emoji{font-size:64px;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.arr-title{font-family:'Playfair Display',serif;font-size:30px;color:#fff}
+.arr-spot{font-size:17px;color:var(--gold);font-weight:500}
+.arr-hint{background:rgba(255,217,61,.08);border:1px solid rgba(255,217,61,.2);border-radius:var(--rl);padding:16px 20px;max-width:300px;text-align:left}
+.arr-hlabel{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.arr-htext{font-size:14px;color:rgba(255,255,255,.7);line-height:1.6}
+.arr-sub{font-size:13px;color:rgba(255,255,255,.35);max-width:240px;line-height:1.6}
+.arr-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;padding:14px 28px;border-radius:var(--rl);font-size:15px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
 
 @media(min-width:500px){
-  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-  .shell { min-height:auto; height:90vh; max-height:860px; border-radius:36px; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.5); }
-  .screen { min-height:auto; height:100%; }
-  #s-loading, #s-arrived { height:100%; }
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .shell{min-height:auto;height:90vh;max-height:900px;border-radius:36px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+  .screen{min-height:auto;height:100%}
+  #s-lang,#s-loading,#s-arrived{height:100%}
 }
+
+/* ===== TRANSIT STEP NAV ===== */
+.trnav-walk{background:var(--dark);flex:1;display:flex;flex-direction:column;}
+.trnav-top{padding:1.25rem 1.5rem .75rem;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.trnav-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px}
+.trnav-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:8px}
+.trnav-meta{display:flex;gap:12px;flex-wrap:wrap}
+.trnav-mi{font-size:13px;color:rgba(255,255,255,.5)}
+
+.trnav-check{background:var(--bg);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:2rem;text-align:center}
+.check-icon{font-size:56px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
+.check-title{font-family:'Playfair Display',serif;font-size:22px;color:var(--text)}
+.check-sub{font-size:14px;color:var(--text2);line-height:1.6;max-width:260px}
+.check-line-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;font-size:13px;font-weight:500}
+.check-dot{width:10px;height:10px;border-radius:50%}
+.check-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px}
+.check-btn-yes{padding:15px;border-radius:var(--rl);background:var(--dark);color:#fff;border:none;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.check-btn-no{padding:12px;border-radius:var(--rl);background:var(--bg2);color:var(--text2);border:1px solid var(--border2);font-size:14px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+
+.trnav-riding{background:var(--dark);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:2rem;text-align:center}
+.riding-icon{font-size:56px;animation:trainBounce 1s ease-in-out infinite alternate}
+@keyframes trainBounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.riding-title{font-family:'Playfair Display',serif;font-size:22px;color:#fff}
+.riding-time{font-size:48px;font-weight:500;color:var(--gold);line-height:1}
+.riding-unit{font-size:14px;color:rgba(255,255,255,.4);margin-top:4px}
+.riding-sub{font-size:13px;color:rgba(255,255,255,.5);max-width:240px;line-height:1.6}
+.riding-btn{padding:14px 28px;border-radius:var(--rl);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:14px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+
 </style>
 </head>
 <body>
 <div class="shell">
 
-<!-- SETUP -->
-<div class="screen active" id="s-setup">
-  <div class="hero">
-    <div class="hero-tag">Secret Adventure</div>
-    <div class="hero-title">Where do you<br>want to go?</div>
-    <div class="hero-sub">We'll take you somewhere unexpected.</div>
-    <div class="loc-bar">
-      <div class="loc-dot searching" id="loc-dot"></div>
-      <div class="loc-text" id="loc-text">Getting your location…</div>
-    </div>
+<!-- LANG -->
+<div class="screen active" id="s-lang">
+  <div class="lang-logo">🗝️<br>Secret Adventure<br><span style="font-size:20px;opacity:.7">秘密の冒険</span></div>
+  <div class="lang-sub">Choose your language / 言語を選んでください</div>
+  <div class="lang-btns">
+    <button class="lang-btn" onclick="setLang('en')"><span class="lang-flag">🇺🇸</span> English</button>
+    <button class="lang-btn" onclick="setLang('ja')"><span class="lang-flag">🇯🇵</span> 日本語</button>
   </div>
-  <div class="setup-body">
-    <div>
-      <span class="flabel">How are you getting there?</span>
-      <div class="chips" id="g-transport">
-        <div class="chip on"  data-val="walking"  onclick="pick(this,'g-transport')">🚶 Walking</div>
-        <div class="chip"     data-val="cycling"  onclick="pick(this,'g-transport')">🚲 Cycling</div>
-        <div class="chip"     data-val="transit"  onclick="pick(this,'g-transport')">🚃 Transit</div>
-      </div>
+</div>
+
+<!-- CHAT -->
+<div class="screen" id="s-chat">
+  <div class="chat-header">
+    <div class="chat-avatar">🗝️</div>
+    <div class="chat-hinfo">
+      <div class="chat-hname" id="ch-name">Adventure Guide</div>
+      <div class="chat-hsub" id="ch-sub">Finding your secret spot…</div>
     </div>
-    <div>
-      <span class="flabel">Max distance</span>
-      <div class="slider-row">
-        <input type="range" id="sl-dist" min="1" max="20" value="5" step="1"
-          oninput="document.getElementById('sv-dist').textContent=this.value+'km';prefs.distance=+this.value">
-        <div class="sval" id="sv-dist">5km</div>
-      </div>
-    </div>
-    <div>
-      <span class="flabel">Time available</span>
-      <div class="slider-row">
-        <input type="range" id="sl-time" min="30" max="300" value="90" step="30"
-          oninput="var v=+this.value;document.getElementById('sv-time').textContent=v>=60?(Math.floor(v/60)+'h'+(v%60?' '+v%60+'m':'')):(v+'m');prefs.time=v">
-        <div class="sval" id="sv-time">1h 30m</div>
-      </div>
-    </div>
-    <div>
-      <span class="flabel">What's your vibe?</span>
-      <div class="vgrid" id="g-vibe">
-        <div class="vcard on" data-val="explore" onclick="pickV(this,'g-vibe')">
-          <div class="vemoji">🗺️</div><div class="vname">Explore</div><div class="vdesc">Hidden gems</div>
-        </div>
-        <div class="vcard" data-val="food" onclick="pickV(this,'g-vibe')">
-          <div class="vemoji">🍜</div><div class="vname">Eat</div><div class="vdesc">Local food</div>
-        </div>
-        <div class="vcard" data-val="relax" onclick="pickV(this,'g-vibe')">
-          <div class="vemoji">🌿</div><div class="vname">Chill</div><div class="vdesc">Parks & cafes</div>
-        </div>
-        <div class="vcard" data-val="random" onclick="pickV(this,'g-vibe')">
-          <div class="vemoji">🎲</div><div class="vname">Surprise</div><div class="vdesc">Totally random</div>
-        </div>
-      </div>
-    </div>
-    <button class="go-btn" onclick="startAdventure()">🗝️ Find my secret spot</button>
+    <button class="chat-lang-toggle" onclick="toggleLang()" id="lang-toggle">日本語</button>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="options-row" id="options-row"></div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input" rows="1" placeholder="Type a message…" onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="chat-send" onclick="sendUserText()">
+      <svg class="send-icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
   </div>
 </div>
 
 <!-- LOADING -->
 <div class="screen" id="s-loading">
   <div class="compass"></div>
-  <div class="load-title">Searching for secrets…</div>
+  <div class="load-title" id="load-title">Searching for secrets…</div>
   <div class="dots"><span></span><span></span><span></span></div>
   <div class="load-sub" id="load-msg">Scanning nearby hidden spots</div>
 </div>
@@ -362,169 +267,467 @@ body {
 <!-- NAV -->
 <div class="screen" id="s-nav">
   <div class="nav-top">
-    <div class="nav-dlabel">Secret destination</div>
-    <div class="nav-dname">Secret spot ahead</div>
+    <div class="nav-dlabel" id="nav-dlabel">Secret destination</div>
+    <div class="nav-dname" id="nav-dname">Secret spot ahead</div>
     <div class="nav-meta">
       <span class="nav-mi" id="nm-dist">📍 —</span>
       <span class="nav-mi" id="nm-time">⏱ —</span>
-      <span class="nav-mi" id="nm-mode">🚶 Walking</span>
+      <span class="nav-mi" id="nm-mode">🚶</span>
     </div>
   </div>
   <div class="arrow-stage">
     <svg class="c-ring" viewBox="0 0 60 60">
       <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-      <text x="30" y="11"  text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
+      <text x="30" y="11" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
       <text x="30" y="53" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">S</text>
       <text x="7"  y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">W</text>
       <text x="53" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">E</text>
       <line id="c-needle" x1="30" y1="30" x2="30" y2="8" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    <div class="d-badge">
-      <div class="d-num"  id="d-num">—</div>
-      <div class="d-unit" id="d-unit">km</div>
-    </div>
+    <div class="d-badge"><div class="d-num" id="d-num">—</div><div class="d-unit" id="d-unit">km</div></div>
     <div class="arrow-wrap">
       <div class="big-arrow" id="big-arrow">
         <svg class="arrow-svg" viewBox="0 0 150 150">
-          <defs>
-            <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#FFD93D"/>
-              <stop offset="100%" stop-color="#FF6B6B"/>
-            </linearGradient>
-          </defs>
+          <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD93D"/><stop offset="100%" stop-color="#FF6B6B"/></linearGradient></defs>
           <polygon points="75,14 122,82 94,82 94,138 56,138 56,82 28,82" fill="url(#ag)"/>
         </svg>
       </div>
       <div class="dir-label" id="dir-label">Calculating…</div>
-      <div class="st-hint"   id="st-hint">Getting your heading</div>
+      <div class="st-hint" id="st-hint">Getting your heading</div>
     </div>
   </div>
   <div class="nav-bot">
-    <button class="nbtn nbtn-stop"    onclick="goBack()">✕ Stop</button>
-    <button class="nbtn nbtn-arrived" onclick="showArrived()">✓ I'm here!</button>
+    <button class="nbtn nbtn-stop" onclick="goBack()" id="nav-stop">✕ Stop</button>
+    <button class="nbtn nbtn-arrived" onclick="showArrived()" id="nav-here">✓ I'm here!</button>
   </div>
 </div>
 
-<!-- TRANSIT -->
+<!-- TRANSIT STEP NAV -->
 <div class="screen" id="s-transit">
-  <div class="tr-header">
-    <div class="tr-dlabel">Secret destination</div>
-    <div class="tr-dname">Secret spot</div>
-    <div class="tr-summ">
-      <div class="tsi"><div class="tsi-val" id="tt-tot">—</div><div class="tsi-lab">Total</div></div>
-      <div class="tsi"><div class="tsi-val" id="tt-xfr">0</div><div class="tsi-lab">Transfers</div></div>
-      <div class="tsi"><div class="tsi-val" id="tt-wlk">—</div><div class="tsi-lab">Walking</div></div>
+  <!-- progress bar -->
+  <div id="tr-progress-wrap" style="background:var(--dark);padding:1rem 1.5rem 0;flex-shrink:0;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+      <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);" id="tr-step-label">Step 1 of 5</span>
+      <button onclick="goBack()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;font-family:inherit;" id="tr-quit">✕ Stop</button>
+    </div>
+    <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:1rem;">
+      <div id="tr-progress-bar" style="height:100%;background:var(--gold);border-radius:2px;transition:width .4s;width:0%"></div>
     </div>
   </div>
-  <div class="tr-body" id="tr-steps"></div>
-  <div class="tr-foot">
-    <button class="tbtn tbtn-back" onclick="goBack()">← Back</button>
-    <button class="tbtn tbtn-go"   onclick="showArrived()">✓ Arrived!</button>
-  </div>
+  <!-- step content injected here -->
+  <div id="tr-step-content" style="flex:1;display:flex;flex-direction:column;"></div>
 </div>
 
 <!-- ARRIVED -->
 <div class="screen" id="s-arrived">
   <div class="arr-emoji">🎉</div>
-  <div class="arr-title">You made it!</div>
+  <div class="arr-title" id="arr-title">You made it!</div>
   <div class="arr-spot" id="arr-spot"></div>
-  <div class="arr-hint">
-    <div class="arr-hlabel">Insider tip</div>
-    <div class="arr-htext" id="arr-hint"></div>
-  </div>
-  <div class="arr-sub">Look around — you're somewhere most people never find.</div>
-  <button class="arr-btn" onclick="goBack()">🗝️ Find another spot</button>
+  <div class="arr-hint"><div class="arr-hlabel" id="arr-hlabel">Insider tip</div><div class="arr-htext" id="arr-hint"></div></div>
+  <div class="arr-sub" id="arr-sub">Look around — you're somewhere most people never find.</div>
+  <button class="arr-btn" onclick="goBack()" id="arr-btn">🗝️ Find another spot</button>
 </div>
 
-</div><!-- /shell -->
-
+</div>
 <script>
+// ============ I18N ============
+var T = {
+  en: {
+    chName:'Adventure Guide', chSub:'Finding your secret spot…',
+    langToggle:'日本語',
+    loadTitle:'Searching for secrets…',
+    loadMsgs:['Scanning nearby hidden spots','Checking locals\' favourites','Avoiding tourist traps','Finding something special…'],
+    navDlabel:'Secret destination', navDname:'Secret spot ahead',
+    navStop:'✕ Stop', navHere:'✓ I\'m here!',
+    trDlabel:'Secret destination', trDname:'Secret spot',
+    ttTot:'Total', ttXfr:'Transfers', ttWlk:'Walking',
+    trBack:'← Back', trArr:'✓ Arrived!',
+    arrTitle:'You made it!', arrHlabel:'Insider tip',
+    arrSub:'Look around — you\'re somewhere most people never find.',
+    arrBtn:'🗝️ Find another spot',
+    dirNames:['North','Northeast','East','Southeast','South','Southwest','West','Northwest'],
+    hints:['along the main road','past the convenience store','through the park path','along the river walk','keep going straight','turn right at the corner','take the narrow side street','follow the canal path'],
+    walkTo:'Walk to {0} Station', walkSub:'{0} min · About {1}m from your location',
+    trainTitle:'Take the {0}', trainSub:'{0} min · {1} stop{2}',
+    boardHere:'Board here', getOn:'Get on ↑',
+    alightHere:'Get off here', getOff:'Get off ↓',
+    walkDest:'Walk to your secret destination', walkDestSub:'{0} min · About {1}m from exit',
+    youArrived:'You\'ve arrived at your secret spot',
+    locReady:'📍 Location ready', locSearching:'Getting your location…', locDemo:'Demo location · Atsugi, Kanagawa',
+  },
+  ja: {
+    chName:'冒険ガイド', chSub:'秘密のスポットを探しています…',
+    langToggle:'English',
+    loadTitle:'秘密の場所を探しています…',
+    loadMsgs:['近くの隠れスポットをスキャン中','地元のお気に入りをチェック中','観光地を回避中','特別な場所を発見中…'],
+    navDlabel:'秘密の目的地', navDname:'秘密のスポットへ',
+    navStop:'✕ 停止', navHere:'✓ 到着！',
+    trDlabel:'秘密の目的地', trDname:'秘密のスポット',
+    ttTot:'合計', ttXfr:'乗り換え', ttWlk:'徒歩',
+    trBack:'← 戻る', trArr:'✓ 到着！',
+    arrTitle:'到着しました！', arrHlabel:'地元のヒント',
+    arrSub:'見回してみて。ほとんどの人が知らない場所にいます。',
+    arrBtn:'🗝️ 別のスポットを探す',
+    dirNames:['北','北東','東','南東','南','南西','西','北西'],
+    hints:['大通りに沿って','コンビニを過ぎたところ','公園の小道を通って','川沿いに','まっすぐ進んで','角を右に曲がって','細い路地を進んで','運河沿いに'],
+    walkTo:'{0}駅まで歩く', walkSub:'{0}分 · 現在地から約{1}m',
+    trainTitle:'{0}に乗車', trainSub:'{0}分 · {1}駅{2}',
+    boardHere:'ここで乗車', getOn:'乗る ↑',
+    alightHere:'ここで下車', getOff:'降りる ↓',
+    walkDest:'秘密のスポットまで歩く', walkDestSub:'{0}分 · 出口から約{1}m',
+    youArrived:'秘密のスポットに到着しました',
+    locReady:'📍 位置情報取得完了', locSearching:'位置情報を取得中…', locDemo:'デモ位置 · 神奈川県厚木市',
+  }
+};
+
+// ============ SPOTS ============
+// Keys: vibe (explore/food/relax/random) × companion (solo/couple/friends/family/kids)
+var SPOTS = {
+  explore: {
+    solo:[
+      {en:{name:'The Old Lantern Alley',desc:'A narrow cobblestone passage most locals walk past. Street art changes every few months.',hint:'Look for the small cat mural at the entrance.'},ja:{name:'古い提灯小路',desc:'地元の人がほとんど素通りする石畳の細い路地。ストリートアートが数ヶ月ごとに変わります。',hint:'入り口の小さな猫のイラストを探してみて。'},dlat:.018,dlng:.022},
+      {en:{name:'The Forgotten Shrine',desc:'Tucked behind a convenience store, this tiny shrine predates the neighborhood by 300 years.',hint:'The stone fox has an offering tray. A small coin is customary.'},ja:{name:'忘れられた神社',desc:'コンビニの裏に隠れた小さな神社。この地域より300年古い歴史を持ちます。',hint:'石狐の前に賽銭皿があります。小銭を一枚どうぞ。'},dlat:.025,dlng:-.015},
+    ],
+    couple:[
+      {en:{name:'Rooftop of the Covered Market',desc:'A secret rooftop via an unmarked staircase. Views across the old quarter — perfect at sunset.',hint:'Ask the vendor near the tea stall. They\'ll point you to the stairs.'},ja:{name:'市場の秘密の屋上',desc:'目印のない階段を上った先の屋上。旧市街を一望できます。夕暮れが最高。',hint:'お茶屋台の近くの店員さんに聞いてみて。階段を教えてくれます。'},dlat:-.012,dlng:.031},
+      {en:{name:'Mirror House Alley',desc:'Hundreds of mirrors mounted in a dead-end alley. Otherworldly at golden hour.',hint:'Best light: 4:30pm summer, 3pm winter. Bring your camera.'},ja:{name:'鏡の路地',desc:'行き止まりの路地に無数の鏡。マジックアワーは別世界のような美しさ。',hint:'夏は16:30、冬は15:00頃が最高の光です。カメラを忘れずに。'},dlat:-.017,dlng:.025},
+    ],
+    friends:[
+      {en:{name:'The Accordion Man\'s Corner',desc:'Every Thursday at 3pm, a retired postman plays accordion under this overpass. 30 years running.',hint:'He plays requests on paper slips. He knows hundreds of songs.'},ja:{name:'アコーディオンおじさんの角',desc:'毎週木曜15時、元郵便配達員がこの高架下でアコーディオンを演奏。30年間続けています。',hint:'紙切れにリクエストを書いて渡すと演奏してくれます。数百曲知っているそう。'},dlat:.031,dlng:.011},
+      {en:{name:'The Typewriter Museum',desc:'A retired English teacher\'s private collection of 200+ typewriters, open on weekends. No website.',hint:'You\'re allowed to type on any of them. Paper and ribbons are provided.'},ja:{name:'タイプライター博物館',desc:'元英語教師の個人コレクション、200台以上のタイプライター。週末公開。ウェブサイトなし。',hint:'どれでも実際に打つことができます。紙とリボンが用意されています。'},dlat:.005,dlng:.038},
+    ],
+    family:[
+      {en:{name:'The Riverside Reading Nook',desc:'A small deck built by locals at a river bend. Books left on a little shelf — take one, leave one.',hint:'There\'s a turtle that lives under the dock. Look between the planks.'},ja:{name:'川辺の読書スポット',desc:'地元の人が川の曲がり角に作った小さなデッキ。小棚に本があります。一冊持って、一冊置いて。',hint:'デッキの下に亀が住んでいます。板の隙間から覗いてみて。'},dlat:.022,dlng:-.011},
+      {en:{name:'The Moss Garden Courtyard',desc:'Hidden behind an old wooden gate. A peaceful garden that\'s always quiet even in the city.',hint:'Best after rain — the moss turns electric green.'},ja:{name:'苔の中庭',desc:'古い木の門の奥に隠れた静かな庭園。都市の中でも常に静寂が保たれています。',hint:'雨上がりが最高。苔が鮮やかな緑に輝きます。'},dlat:.014,dlng:.008},
+    ],
+    kids:[
+      {en:{name:'The Frog Pond Path',desc:'A hidden path along an irrigation channel where kids have spotted frogs, dragonflies and crayfish for generations.',hint:'Early morning is best. Bring a small net if you have one.'},ja:{name:'カエルの池の小道',desc:'用水路沿いの隠れ道。カエル、トンボ、ザリガニを昔から子供たちが発見してきた場所。',hint:'早朝が一番。小さな網があると楽しめます。'},dlat:.019,dlng:.007},
+      {en:{name:'The Giant Fig Tree',desc:'A 200-year-old fig tree with roots that have swallowed an old stone wall. Climbable and magical.',hint:'The hollow in the trunk is big enough to sit inside. Kids love it.'},ja:{name:'巨大なイチジクの木',desc:'古い石垣を飲み込んだ樹齢200年のイチジクの木。登れます。',hint:'幹のうろは中に座れるくらい大きいです。子どもに大人気。'},dlat:-.009,dlng:.021},
+    ],
+  },
+  food: {
+    solo:[
+      {en:{name:'Mama Keiko\'s Counter',desc:'No sign. Eight seats. Best ramen in the area. Cash only. She\'s been making the same bowl for 40 years.',hint:'Open 11am, sells out by 2pm. Go early.'},ja:{name:'ケイコさんのカウンター',desc:'看板なし。8席のみ。地元最高のラーメン。現金のみ。40年間同じ味。',hint:'11時開店、14時には売り切れることが多い。早めに行って。'},dlat:.009,dlng:-.019},
+      {en:{name:'The Basement Izakaya',desc:'Below a dry cleaner. A noren curtain, dim stairs. Best yakitori in the district.',hint:'Ring the small bell by the curtain instead of knocking.'},ja:{name:'地下の居酒屋',desc:'クリーニング店の地下。のれんと薄暗い階段。地区最高の焼き鳥。',hint:'ドアをノックせず、のれんの横の小さなベルを鳴らして。'},dlat:-.021,dlng:.014},
+    ],
+    couple:[
+      {en:{name:'The Grandmother Bakery',desc:'Fresh melon pan from an 80-year-old woman\'s home kitchen. Weekday mornings only. Locals line up before school.',hint:'She may offer you tea if you admire her garden. It would be rude to decline.'},ja:{name:'おばあちゃんのパン屋',desc:'80歳のおばあちゃんが自宅キッチンで焼く新鮮なメロンパン。平日朝のみ。地元の子どもが登校前に並びます。',hint:'庭を褒めるとお茶を出してくれることも。断るのは失礼かも。'},dlat:-.007,dlng:-.023},
+      {en:{name:'Platform 0 Café',desc:'An old unused platform converted into a café. Trains pass every 15 min. Order the matcha milk.',hint:'The far end of the platform has a bench with a perfect view.'},ja:{name:'0番線カフェ',desc:'廃ホームをカフェに改装。15分おきに電車が通過。抹茶ラテがおすすめ。',hint:'ホームの一番端のベンチが最高の特等席。'},dlat:-.008,dlng:-.028},
+    ],
+    friends:[
+      {en:{name:'The Rooftop Bar No One Knows',desc:'Up three unmarked flights above a ramen shop. No sign. Regulars only — or those who know to look up.',hint:'Buzz the intercom marked 屋上 (rooftop). They\'ll let you in.'},ja:{name:'誰も知らない屋上バー',desc:'ラーメン屋の上、目印のない階段を3階分上った先。常連か、上を見上げた人だけが知っている。',hint:'屋上と書かれたインターフォンを押して。入れてくれます。'},dlat:.012,dlng:.028},
+      {en:{name:'The Night Noodle Stand',desc:'Open only after 11pm. Run by a former chef from a Michelin restaurant. No chairs — eat standing.',hint:'The limited menu is on a chalkboard. Whatever is crossed out is sold out.'},ja:{name:'深夜の麺スタンド',desc:'11時以降のみ営業。元ミシュランシェフが経営。椅子なし、立ち食いスタイル。',hint:'黒板の限定メニューをチェック。取り消し線が引いてあるものは売り切れ。'},dlat:.033,dlng:-.008},
+    ],
+    family:[
+      {en:{name:'The Sunday Fish Market',desc:'Open Sunday mornings only. Local fishermen sell directly. Kids can touch the catch.',hint:'Arrive before 8am for the best selection. Bring a cooler if you want to take fish home.'},ja:{name:'日曜の魚市場',desc:'日曜朝のみ開催。地元漁師が直売。子どもが獲れたての魚に触れます。',hint:'8時前に行くと品数が豊富。持ち帰る場合はクーラーボックスを持参して。'},dlat:-.014,dlng:.019},
+      {en:{name:'The Dumpling Grandmother',desc:'A grandmother makes dumplings in her open garage every Sunday. Neighbourhood kids help fold. Everyone is welcome.',hint:'Bring 500 yen per person. She will not accept more.'},ja:{name:'餃子のおばあちゃん',desc:'毎週日曜、おばあちゃんが開けっ放しのガレージで餃子を作ります。近所の子どもが包む手伝いをしています。誰でも歓迎。',hint:'一人500円を持参。それ以上は受け取ってもらえません。'},dlat:.007,dlng:-.016},
+    ],
+    kids:[
+      {en:{name:'The Ice Cream Scientist',desc:'A former chemistry teacher who now makes liquid nitrogen ice cream in his front garden on weekends.',hint:'He explains the science while he makes it. Kids who ask questions get extra toppings.'},ja:{name:'アイスクリームの科学者',desc:'元化学教師が週末に自宅の庭で液体窒素アイスクリームを作っています。',hint:'作りながら科学を説明してくれます。質問した子には追加トッピングがもらえます。'},dlat:.011,dlng:.034},
+      {en:{name:'The Jungle Juice Stand',desc:'Hidden in a park, a family runs a fresh fruit stand with creative blends only kids can name.',hint:'Ask for the "secret blend" — it changes every week.'},ja:{name:'ジャングルジューススタンド',desc:'公園の奥に隠れた家族経営のフレッシュフルーツスタンド。子どもだけが命名できる創作ブレンドが人気。',hint:'「秘密ブレンド」をリクエストして。毎週変わります。'},dlat:-.006,dlng:.029},
+    ],
+  },
+  relax: {
+    solo:[
+      {en:{name:'The Moss Garden Courtyard',desc:'Hidden behind an old wooden gate. Always quiet, even in the middle of the city.',hint:'Best after rain — the moss turns electric green.'},ja:{name:'苔の中庭',desc:'古い木の門の奥に隠れた庭園。都市の真ん中でも常に静寂。',hint:'雨上がりが最高。苔が鮮やかに輝きます。'},dlat:.014,dlng:.008},
+      {en:{name:'The Writer\'s Bench',desc:'A weathered bench under a ginkgo tree at the top of a hill. The whole city spreads below.',hint:'The best view is to the east. On clear days you can see the mountains.'},ja:{name:'作家のベンチ',desc:'丘の頂上、銀杏の木の下の風雨にさらされたベンチ。街全体が見渡せます。',hint:'東向きが一番の絶景。晴れた日は山まで見えます。'},dlat:.028,dlng:-.006},
+    ],
+    couple:[
+      {en:{name:'The Secret Bamboo Grove',desc:'Five minutes off the main path, a small bamboo grove that rustles in the wind. Completely private.',hint:'Bring a blanket. The ground is soft moss.'},ja:{name:'秘密の竹林',desc:'メインの道から5分外れた小さな竹林。風に揺れる音が心地よい。完全に人目を避けられます。',hint:'ブランケットを持参して。地面は柔らかい苔です。'},dlat:.021,dlng:.013},
+      {en:{name:'Platform 0 Café',desc:'An old unused platform turned café. Trains pass every 15 min. Perfect for a slow afternoon.',hint:'The far end bench has a perfect view with almost no foot traffic.'},ja:{name:'0番線カフェ',desc:'廃ホームをカフェに改装。15分おきに電車が通過。ゆっくりとした午後に最高。',hint:'ホームの一番端のベンチが穴場。人もほとんど来ません。'},dlat:-.008,dlng:-.028},
+    ],
+    friends:[
+      {en:{name:'The Rooftop Garden Club',desc:'A community garden on a building rooftop. Members welcome visitors on Sunday afternoons.',hint:'Bring something to share — fruit, snacks, or drinks. It\'s that kind of place.'},ja:{name:'屋上ガーデンクラブ',desc:'ビルの屋上にあるコミュニティガーデン。日曜の午後、メンバーが訪問者を歓迎します。',hint:'何か持参して。フルーツ、お菓子、飲み物など。そういう雰囲気の場所です。'},dlat:.016,dlng:.022},
+    ],
+    family:[
+      {en:{name:'The Firefly Stream',desc:'A small stream where fireflies still appear in early summer. Almost no one else knows.',hint:'Come after dark in June. Bring the kids. No torches — let your eyes adjust.'},ja:{name:'蛍の小川',desc:'初夏にまだ蛍が現れる小川。ほとんど知られていません。',hint:'6月の日没後に来て。子どもを連れてきて。懐中電灯は禁止。目を慣らして。'},dlat:-.003,dlng:.027},
+    ],
+    kids:[
+      {en:{name:'The Bug Hunter\'s Log',desc:'A fallen log in a quiet park corner that has been home to beetles, centipedes and lizards for years.',hint:'Lift gently and replace carefully. The animals live there year-round.'},ja:{name:'虫捕り倒木',desc:'静かな公園の片隅に倒れた丸太。何年もカブトムシ、ムカデ、トカゲの住処になっています。',hint:'そっと持ち上げて、丁寧に戻してあげて。動物が年中住んでいます。'},dlat:.003,dlng:.012},
+    ],
+  },
+  random: {
+    solo:[
+      {en:{name:'The Vending Machine Graveyard',desc:'Thirty decommissioned vending machines arranged in a yard. One still works and sells canned coffee for 50 yen.',hint:'The working machine is the third from the right in the back row.'},ja:{name:'自販機の墓場',desc:'廃棄された自販機が30台並んだ場所。一台だけ動いていて缶コーヒーが50円で買えます。',hint:'動いている機械は奥の列の右から3番目。'},dlat:.033,dlng:.019},
+    ],
+    couple:[
+      {en:{name:'The Love Lock Drainpipe',desc:'Not a bridge — a drainpipe on the side of an old building that locals started attaching locks to in 2003. Over 400 locks now.',hint:'Locks are available at the hardware store around the corner.'},ja:{name:'愛の錠前排水管',desc:'橋ではなく、古い建物の排水管。2003年から地元の人が錠前を付け始めました。今は400個以上。',hint:'錠前は角の金物屋で売っています。'},dlat:.008,dlng:.017},
+    ],
+    friends:[
+      {en:{name:'The Midnight Convenience Store Ritual',desc:'At exactly midnight, the staff of this konbini gather outside for a 3-minute break. Regulars join them. Nobody knows why it started.',hint:'Just show up at midnight and stand near the entrance. You\'ll understand.'},ja:{name:'深夜のコンビニ儀式',desc:'ちょうど0時に、このコンビニのスタッフが3分間外に出てきます。常連も混じります。なぜ始まったか誰も知りません。',hint:'0時に入り口付近に立っているだけ。自然にわかります。'},dlat:-.022,dlng:.016},
+    ],
+    family:[
+      {en:{name:'The Giant Topiary Turtle',desc:'A topiary turtle in someone\'s front garden. Seven years in the making. The owner gives tours on request.',hint:'Ring the bell and ask about the turtle. The owner loves to talk about it.'},ja:{name:'巨大トピアリーの亀',desc:'ある家の前庭にあるトピアリーの亀。7年かけて制作。リクエストがあれば見学させてくれます。',hint:'ベルを押して亀のことを聞いてみて。オーナーは喜んで話してくれます。'},dlat:.015,dlng:-.024},
+    ],
+    kids:[
+      {en:{name:'The Echo Tunnel',desc:'A short pedestrian underpass with perfect acoustics. Clap once and it echoes 11 times.',hint:'Sing in there. The echo will surprise you.'},ja:{name:'こだまトンネル',desc:'完璧な音響を持つ短い歩行者用地下道。一度手を叩くと11回こだまします。',hint:'中で歌ってみて。こだまに驚くはず。'},dlat:.004,dlng:-.008},
+    ],
+  },
+};
+
 var LINES=[
-  {name:'Odakyu Line',color:'#0072BC',stations:['Shinjuku','Yoyogi-uehara','Shimokitazawa','Gotokuji','Kyodo','Chitose-funabashi','Atsugi','Odawara']},
-  {name:'Keio Line',color:'#2CA84D',stations:['Shinjuku','Hatagaya','Sasazuka','Meidaimae','Shimo-takaido','Fuchu','Chofu','Hashimoto']},
+  {name:'Odakyu Line',color:'#0072BC',stations:['Shinjuku','Yoyogi-uehara','Shimokitazawa','Gotokuji','Chitose-funabashi','Atsugi','Odawara']},
+  {name:'Keio Line',color:'#2CA84D',stations:['Shinjuku','Hatagaya','Meidaimae','Shimo-takaido','Fuchu','Chofu','Hashimoto']},
   {name:'Tokyu Den-en-toshi Line',color:'#009944',stations:['Shibuya','Sangenjaya','Komazawa-daigaku','Yoga','Futako-tamagawa','Mizonokuchi','Nagatsuta','Chuo-rinkan']},
   {name:'Tokyo Metro Ginza Line',color:'#FF9500',stations:['Shibuya','Omote-sando','Aoyama-itchome','Akasaka-mitsuke','Toranomon','Shimbashi','Ginza','Nihonbashi','Kanda','Ueno']},
   {name:'JR Yamanote Line',color:'#80C241',stations:['Shinjuku','Harajuku','Shibuya','Ebisu','Meguro','Gotanda','Shinagawa','Hamamatsucho','Shimbashi','Tokyo','Kanda','Akihabara','Ueno','Nippori','Ikebukuro','Takadanobaba']},
 ];
 
-var SPOTS={
-  explore:[
-    {name:'The Old Lantern Alley',desc:'A narrow cobblestone passage most locals walk past. Street art changes every few months.',hint:'Look for the small cat mural at the entrance.',dlat:.018,dlng:.022},
-    {name:'The Forgotten Shrine',desc:'Tucked behind a convenience store, 300 years old and completely unexpected.',hint:'The stone fox has an offering tray. A small coin is customary.',dlat:.025,dlng:-.015},
-    {name:'Rooftop of the Covered Market',desc:'A secret rooftop via an unmarked staircase at the back.',hint:'Ask the vendor near the tea stall to point you to the stairs.',dlat:-.012,dlng:.031},
-  ],
-  food:[
-    {name:"Mama Keiko's Counter",desc:'No sign. Eight seats. Best ramen. Cash only.',hint:'Open 11am, sells out by 2pm. Go early.',dlat:.009,dlng:-.019},
-    {name:'The Basement Izakaya',desc:'Below a dry cleaner. A noren curtain, dim stairs, best yakitori.',hint:'Ring the small bell by the curtain.',dlat:-.021,dlng:.014},
-    {name:'The Grandmother Bakery',desc:'Fresh melon pan from an 80-year-old home kitchen. Weekday mornings only.',hint:'She may offer you tea. It would be rude to decline.',dlat:-.007,dlng:-.023},
-  ],
-  relax:[
-    {name:'The Moss Garden Courtyard',desc:'Hidden behind an old wooden gate. Always quiet.',hint:'Best after light rain — the moss turns electric green.',dlat:.014,dlng:.008},
-    {name:'Platform 0 Café',desc:'An old unused platform turned café. Trains pass every 15 min.',hint:'The far end bench has a perfect view with no foot traffic.',dlat:-.008,dlng:-.028},
-    {name:'The Riverside Reading Nook',desc:'A small deck at a river bend. Books left by locals.',hint:"There's a turtle under the dock. Look between the planks.",dlat:.022,dlng:-.011},
-  ],
-  random:[
-    {name:"The Accordion Man's Corner",desc:'Every Thursday at 3pm, a retired postman plays accordion here.',hint:'He plays requests on paper slips. 30 years and still going.',dlat:.031,dlng:.011},
-    {name:'Mirror House Alley',desc:'Hundreds of mirrors. Otherworldly at golden hour.',hint:'Best light: 4:30pm summer, 3pm winter.',dlat:-.017,dlng:.025},
-    {name:'The Typewriter Museum',desc:'200+ typewriters, open weekends. No website.',hint:"You're allowed to type on any of them.",dlat:.005,dlng:.038},
-  ],
+// ============ STATE ============
+var lang='en';
+var userLat=null,userLng=null,spot=null,watchId=null,simTimer=null;
+var prefs={transport:'walking',distance:10,time:90,vibe:'explore',companion:'solo'};
+var step=0; // chat step
+
+// ============ LANG ============
+function setLang(l){
+  lang=l;
+  document.body.className=l==='ja'?'ja':'';
+  showScreen('s-chat');
+  applyLang();
+  startGeo();
+  startChat();
+}
+function toggleLang(){
+  setLang(lang==='en'?'ja':'en');
+}
+function applyLang(){
+  var t=T[lang];
+  document.getElementById('ch-name').textContent=t.chName;
+  document.getElementById('ch-sub').textContent=t.chSub;
+  document.getElementById('lang-toggle').textContent=t.langToggle;
+  document.getElementById('chat-input').placeholder=lang==='ja'?'メッセージを入力…':'Type a message…';
+}
+function tx(key){return T[lang][key]||key;}
+
+// ============ GEO ============
+function startGeo(){
+  if(!navigator.geolocation){userLat=35.4437;userLng=139.338;return;}
+  navigator.geolocation.getCurrentPosition(
+    function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;},
+    function(){userLat=35.4437;userLng=139.338;},
+    {enableHighAccuracy:true,timeout:9000}
+  );
+}
+
+// ============ CHAT ENGINE ============
+var FLOW_EN=[
+  {bot:"Hey! 👋 I'm your secret adventure guide. I'll take you somewhere unexpected nearby. First — who are you going with today?",
+   opts:[{label:'Just me 🚶',val:'solo'},{label:'Partner / date 💑',val:'couple'},{label:'Friends 👯',val:'friends'},{label:'Family 👨‍👩‍👧',val:'family'},{label:'With kids 🧒',val:'kids'}],
+   key:'companion'},
+  {bot:null, // dynamic based on companion
+   opts:[{label:'Explore & discover 🗺️',val:'explore'},{label:'Eat & drink 🍜',val:'food'},{label:'Chill & relax 🌿',val:'relax'},{label:'Random surprise 🎲',val:'random'}],
+   key:'vibe'},
+  {bot:null,
+   opts:[{label:'Walking 🚶',val:'walking'},{label:'Cycling 🚲',val:'cycling'},{label:'Transit 🚃',val:'transit'}],
+   key:'transport'},
+  {bot:null,
+   opts:[{label:'15 min ⚡',val:15},{label:'30 min 🚀',val:30},{label:'1 hour ⏱',val:60},{label:'2 hours 🌅',val:120},{label:'3 hours 🗺️',val:180}],
+   key:'time'},
+  {bot:null, opts:null, key:'go'},
+];
+
+var FLOW_JA=[
+  {bot:"こんにちは！👋 秘密の冒険ガイドです。近くの意外な場所へご案内します。まず、今日は誰と一緒ですか？",
+   opts:[{label:'一人で 🚶',val:'solo'},{label:'パートナー・デート 💑',val:'couple'},{label:'友達と 👯',val:'friends'},{label:'家族と 👨‍👩‍👧',val:'family'},{label:'子ども連れ 🧒',val:'kids'}],
+   key:'companion'},
+  {bot:null,
+   opts:[{label:'探索・発見 🗺️',val:'explore'},{label:'食べる・飲む 🍜',val:'food'},{label:'のんびりする 🌿',val:'relax'},{label:'サプライズ 🎲',val:'random'}],
+   key:'vibe'},
+  {bot:null,
+   opts:[{label:'徒歩 🚶',val:'walking'},{label:'自転車 🚲',val:'cycling'},{label:'電車 🚃',val:'transit'}],
+   key:'transport'},
+  {bot:null,
+   opts:[{label:'15分 ⚡',val:15},{label:'30分 🚀',val:30},{label:'1時間 ⏱',val:60},{label:'2時間 🌅',val:120},{label:'3時間 🗺️',val:180}],
+   key:'time'},
+  {bot:null,opts:null,key:'go'},
+];
+
+var BOT2_EN={
+  solo:"Got it, solo adventure! 🌟 What kind of experience are you looking for?",
+  couple:"A date adventure! 💑 I love it. What vibe are you going for?",
+  friends:"Friends trip! 👯 The more the merrier. What are you all in the mood for?",
+  family:"Family outing! 👨‍👩‍👧 I'll find something everyone will enjoy. What's the vibe?",
+  kids:"With the little ones! 🧒 I'll find somewhere they'll love. What kind of adventure?",
+};
+var BOT2_JA={
+  solo:"一人旅ですね！🌟 どんな体験をお探しですか？",
+  couple:"デートの冒険！💑 いいですね。どんな雰囲気がお好みですか？",
+  friends:"友達との旅！👯 賑やかで楽しそう。みんなどんな気分ですか？",
+  family:"家族の外出！👨‍👩‍👧 全員が楽しめる場所を探します。どんな感じがいいですか？",
+  kids:"子ども連れですね！🧒 子どもが喜ぶ場所を探します。どんな冒険がいいですか？",
+};
+var BOT3_EN={
+  explore:"Perfect. How are you getting there?",
+  food:"Hungry for an adventure! 🍜 How are you getting there?",
+  relax:"A chill day sounds perfect. 🌿 How are you getting there?",
+  random:"Leaving it to fate! 🎲 How are you getting there?",
+};
+var BOT3_JA={
+  explore:"いいですね。移動手段は？",
+  food:"食の冒険！🍜 移動手段は？",
+  relax:"のんびりデーですね。🌿 移動手段は？",
+  random:"運命に任せましょう！🎲 移動手段は？",
+};
+var BOT4_EN={
+  walking:"Walking it is! 🚶 How much time do you have for the one-way trip?",
+  cycling:"Cycling! 🚲 How much time do you have?",
+  transit:"Taking transit! 🚃 How much time do you have one-way?",
+};
+var BOT4_JA={
+  walking:"徒歩ですね！🚶 片道どのくらいの時間が使えますか？",
+  cycling:"自転車ですね！🚲 片道どのくらいの時間が使えますか？",
+  transit:"電車ですね！🚃 片道どのくらいの時間が使えますか？",
 };
 
-var prefs={transport:'walking',distance:5,time:90,vibe:'explore'};
-var userLat=null,userLng=null,spot=null,watchId=null,simTimer=null;
+function getFlow(){return lang==='ja'?FLOW_JA:FLOW_EN;}
 
-function pick(el,gid){
-  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  prefs.transport=el.dataset.val;
-}
-function pickV(el,gid){
-  document.querySelectorAll('#'+gid+' .vcard').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  prefs.vibe=el.dataset.val;
+function startChat(){
+  step=0;
+  document.getElementById('chat-body').innerHTML='';
+  document.getElementById('options-row').innerHTML='';
+  setTimeout(function(){showBotMsg(getFlow()[0].bot);},400);
+  setTimeout(function(){showOptions(getFlow()[0].opts,0);},900);
 }
 
+function showBotMsg(text){
+  var body=document.getElementById('chat-body');
+  var div=document.createElement('div');
+  div.className='msg bot';
+  div.innerHTML='<div class="msg-av">🗝️</div><div class="bubble">'+text+'</div>';
+  body.appendChild(div);
+  body.scrollTop=body.scrollHeight;
+}
+function showUserMsg(text){
+  var body=document.getElementById('chat-body');
+  var div=document.createElement('div');
+  div.className='msg user';
+  div.innerHTML='<div class="bubble">'+text+'</div>';
+  body.appendChild(div);
+  body.scrollTop=body.scrollHeight;
+}
+function showTyping(){
+  var body=document.getElementById('chat-body');
+  var div=document.createElement('div');
+  div.className='msg bot';div.id='typing';
+  div.innerHTML='<div class="msg-av">🗝️</div><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  body.appendChild(div);
+  body.scrollTop=body.scrollHeight;
+}
+function removeTyping(){var t=document.getElementById('typing');if(t)t.remove();}
+
+function showOptions(opts,stepIdx){
+  var row=document.getElementById('options-row');
+  row.innerHTML='';
+  if(!opts)return;
+  opts.forEach(function(o){
+    var btn=document.createElement('button');
+    btn.className='opt-btn';btn.textContent=o.label;
+    btn.onclick=function(){selectOption(o,stepIdx);};
+    row.appendChild(btn);
+  });
+}
+
+function selectOption(o,stepIdx){
+  var flow=getFlow();
+  var key=flow[stepIdx].key;
+  showUserMsg(o.label);
+  document.getElementById('options-row').innerHTML='';
+
+  if(key==='companion') prefs.companion=o.val;
+  else if(key==='vibe')  prefs.vibe=o.val;
+  else if(key==='transport') prefs.transport=o.val;
+  else if(key==='time'){
+    prefs.time=o.val;
+    // convert time (minutes) to distance (km) based on transport speed
+    var spd={walking:4.5,cycling:14,transit:30};
+    prefs.distance=Math.round((prefs.time/60)*(spd[prefs.transport]||4.5));
+  }
+  else if(key==='go'){ startAdventure(); return; }
+
+  step=stepIdx+1;
+  showTyping();
+  setTimeout(function(){
+    removeTyping();
+    var nextFlow=flow[step];
+    var botText='';
+    if(step===1){botText=lang==='ja'?BOT2_JA[prefs.companion]:BOT2_EN[prefs.companion];}
+    else if(step===2){botText=lang==='ja'?BOT3_JA[prefs.vibe]:BOT3_EN[prefs.vibe];}
+    else if(step===3){botText=lang==='ja'?BOT4_JA[prefs.transport]:BOT4_EN[prefs.transport];}
+    else if(step===4){
+      // confirm
+      var timeLabel=prefs.time>=60?(Math.floor(prefs.time/60)+(prefs.time%60?'.'+prefs.time%60:'')+'h'):prefs.time+'min';
+      var timeJa=prefs.time>=60?(Math.floor(prefs.time/60)+'時間'+(prefs.time%60?prefs.time%60+'分':'')):prefs.time+'分';
+      botText=lang==='ja'
+        ?'了解！片道'+timeJa+'で行ける秘密のスポットを探します。準備はいいですか？ 🗝️'
+        :'Perfect! I\'ll find a secret spot within '+timeLabel+' one way. Ready to go? 🗝️';
+      showBotMsg(botText);
+      setTimeout(function(){
+        showOptions([{label:lang==='ja'?'出発！🚀':'Let\'s go! 🚀',val:'go'}],4);
+      },400);
+      return;
+    }
+    showBotMsg(botText);
+    setTimeout(function(){showOptions(nextFlow.opts,step);},400);
+  },1000);
+}
+
+function sendUserText(){
+  var input=document.getElementById('chat-input');
+  var text=input.value.trim();
+  if(!text)return;
+  input.value='';autoResize(input);
+  showUserMsg(text);
+  showTyping();
+  setTimeout(function(){
+    removeTyping();
+    var reply=lang==='ja'
+      ?'なるほど！では次の質問です。'
+      :"Got it! Let me ask you the next question.";
+    showBotMsg(reply);
+    var flow=getFlow();
+    if(step<flow.length){showOptions(flow[step].opts,step);}
+  },800);
+}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendUserText();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+
+// ============ SCREENS ============
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
 
-function startGeo(){
-  if(!navigator.geolocation){
-    setLoc('error','Location not supported');return;
-  }
-  setLoc('searching','Getting your location…');
-  navigator.geolocation.getCurrentPosition(
-    function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;setLoc('ready','📍 '+userLat.toFixed(5)+', '+userLng.toFixed(5));},
-    function(){userLat=35.4437;userLng=139.3380;setLoc('ready','Demo location · Atsugi, Kanagawa');},
-    {enableHighAccuracy:true,timeout:9000}
-  );
-}
-function setLoc(state,msg){
-  document.getElementById('loc-dot').className='loc-dot '+state;
-  document.getElementById('loc-text').textContent=msg;
-}
-
-var LMSGS=['Scanning nearby hidden spots','Checking locals\' favourites','Avoiding tourist traps','Finding something special…'];
+// ============ LOADING ============
 var lmi=0,lmt=null;
-
 function startAdventure(){
-  if(!userLat){userLat=35.4437;userLng=139.3380;}
+  if(!userLat){userLat=35.4437;userLng=139.338;}
   showScreen('s-loading');
-  lmi=0;
-  document.getElementById('load-msg').textContent=LMSGS[0];
-  lmt=setInterval(function(){lmi=(lmi+1)%LMSGS.length;document.getElementById('load-msg').textContent=LMSGS[lmi];},900);
+  document.getElementById('load-title').textContent=tx('loadTitle');
+  var msgs=T[lang].loadMsgs;
+  lmi=0;document.getElementById('load-msg').textContent=msgs[0];
+  lmt=setInterval(function(){lmi=(lmi+1)%msgs.length;document.getElementById('load-msg').textContent=msgs[lmi];},900);
   setTimeout(function(){
     clearInterval(lmt);
-    var list=SPOTS[prefs.vibe]||SPOTS.explore;
-    spot=list[Math.floor(Math.random()*list.length)];
-    spot.lat=userLat+spot.dlat;
-    spot.lng=userLng+spot.dlng;
+    pickSpot();
     if(prefs.transport==='transit')showTransit();else showNav();
   },2800);
 }
 
+function pickSpot(){
+  var vibeSpots=SPOTS[prefs.vibe]||SPOTS.explore;
+  var compSpots=vibeSpots[prefs.companion]||vibeSpots.solo||[];
+  // filter by distance
+  var maxDelta=prefs.distance/111;
+  var filtered=compSpots.filter(function(s){return Math.abs(s.dlat)<=maxDelta&&Math.abs(s.dlng)<=maxDelta;});
+  var pool=filtered.length>0?filtered:compSpots;
+  spot=pool[Math.floor(Math.random()*pool.length)];
+  spot.lat=userLat+spot.dlat;
+  spot.lng=userLng+spot.dlng;
+}
+
+// ============ MATH ============
 function hav(a,b,c,d){
   var R=6371,r=Math.PI/180,dL=(c-a)*r,dG=(d-b)*r;
   var x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dG/2)*Math.sin(dG/2);
@@ -535,100 +738,270 @@ function bear(a,b,c,d){
   var y=Math.sin(dG)*Math.cos(c*r),x=Math.cos(a*r)*Math.sin(c*r)-Math.sin(a*r)*Math.cos(c*r)*Math.cos(dG);
   return(Math.atan2(y,x)*180/Math.PI+360)%360;
 }
-var DIRS=['North','Northeast','East','Southeast','South','Southwest','West','Northwest'];
-var HINTS=['along the main road','past the convenience store','through the park path','along the river walk','keep going straight','turn right at the corner','take the narrow side street','follow the canal path'];
 
+// ============ NAV ============
 function showNav(){
+  document.getElementById('nav-dlabel').textContent=tx('navDlabel');
+  document.getElementById('nav-dname').textContent=tx('navDname');
+  document.getElementById('nav-stop').textContent=tx('navStop');
+  document.getElementById('nav-here').textContent=tx('navHere');
+  document.getElementById('nm-mode').textContent=prefs.transport==='cycling'?'🚲':'🚶';
   showScreen('s-nav');
-  document.getElementById('nm-mode').textContent=(prefs.transport==='cycling'?'🚲 Cycling':'🚶 Walking');
   updateNav(userLat,userLng);
   stopWatch();
   if(navigator.geolocation){
     watchId=navigator.geolocation.watchPosition(
       function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;updateNav(userLat,userLng);},
-      function(){startSim();},
-      {enableHighAccuracy:true,maximumAge:2000}
+      function(){startSim();},{enableHighAccuracy:true,maximumAge:2000}
     );
   }else{startSim();}
 }
-
 var simLat,simLng;
-function startSim(){
-  simLat=userLat;simLng=userLng;
-  simTimer=setInterval(function(){
-    var b=bear(simLat,simLng,spot.lat,spot.lng);
-    simLat+=0.00025*Math.cos(b*Math.PI/180);
-    simLng+=0.00025*Math.sin(b*Math.PI/180);
-    updateNav(simLat,simLng);
-  },1500);
-}
-function stopWatch(){
-  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
-  if(simTimer!==null){clearInterval(simTimer);simTimer=null;}
-}
+function startSim(){simLat=userLat;simLng=userLng;simTimer=setInterval(function(){var b=bear(simLat,simLng,spot.lat,spot.lng);simLat+=0.00025*Math.cos(b*Math.PI/180);simLng+=0.00025*Math.sin(b*Math.PI/180);updateNav(simLat,simLng);},1500);}
+function stopWatch(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}if(simTimer!==null){clearInterval(simTimer);simTimer=null;}}
 
 function updateNav(lat,lng){
   var dist=hav(lat,lng,spot.lat,spot.lng);
   var b=bear(lat,lng,spot.lat,spot.lng);
   var spd=prefs.transport==='cycling'?14:4.5;
   var mins=Math.max(1,Math.round(dist/spd*60));
+  var dirs=T[lang].dirNames;
+  var hints=T[lang].hints;
   document.getElementById('big-arrow').style.transform='rotate('+b+'deg)';
-  document.getElementById('dir-label').textContent='Head '+DIRS[Math.round(b/45)%8];
-  document.getElementById('st-hint').textContent=HINTS[Math.floor(b/45)%8];
+  document.getElementById('dir-label').textContent=(lang==='ja'?'':'Head ')+dirs[Math.round(b/45)%8]+(lang==='ja'?'へ':'');
+  document.getElementById('st-hint').textContent=hints[Math.floor(b/45)%8];
   document.getElementById('d-num').textContent=dist>1?dist.toFixed(1):Math.round(dist*1000);
   document.getElementById('d-unit').textContent=dist>1?'km':'m';
-  document.getElementById('nm-dist').textContent='📍 '+dist.toFixed(2)+' km';
-  document.getElementById('nm-time').textContent='⏱ ~'+mins+' min';
+  document.getElementById('nm-dist').textContent='📍 '+dist.toFixed(2)+'km';
+  document.getElementById('nm-time').textContent='⏱ ~'+mins+(lang==='ja'?'分':' min');
   var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);
   document.getElementById('c-needle').setAttribute('x2',nx.toFixed(1));
   document.getElementById('c-needle').setAttribute('y2',ny.toFixed(1));
   if(dist<0.04)showArrived();
 }
 
+// ============ TRANSIT STEP NAV ============
+function fmt(str){for(var i=1;i<arguments.length;i++)str=str.replace('{'+( i-1)+'}',arguments[i]);return str;}
+
+var trPlan=null;
+var trStepIdx=0;
+var trSimLat2,trSimLng2;
+
 function showTransit(){
-  showScreen('s-transit');
   var line=LINES[Math.floor(Math.random()*LINES.length)];
   var si=Math.floor(Math.random()*Math.max(1,line.stations.length-4));
   var board=line.stations[si];
   var stops=2+Math.floor(Math.random()*3);
   var alight=line.stations[Math.min(si+stops,line.stations.length-1)];
-  var ac=line.stations.indexOf(alight)-line.stations.indexOf(board);
-  var wTo=4+Math.round(Math.random()*7);
-  var ride=ac*2+Math.round(Math.random()*3);
-  var wFrom=3+Math.round(Math.random()*8);
-  var tot=wTo+ride+wFrom;
-  document.getElementById('tt-tot').textContent=tot+'m';
-  document.getElementById('tt-wlk').textContent=(wTo+wFrom)+'m';
-  var steps=[
-    {type:'walk',icon:'🚶',title:'Walk to '+board+' Station',sub:wTo+' min · About '+Math.round(wTo*80)+'m away'},
-    {type:'train',icon:'🚃',title:'Take the '+line.name,sub:ride+' min · '+ac+' stop'+(ac>1?'s':''),line:line,board:board,alight:alight},
-    {type:'walk',icon:'🚶',title:'Walk to your secret destination',sub:wFrom+' min · About '+Math.round(wFrom*80)+'m from exit'},
-    {type:'dest',icon:'🗝️',title:spot.name,sub:"You've arrived at your secret spot"},
-  ];
-  var c=document.getElementById('tr-steps');c.innerHTML='';
-  steps.forEach(function(s,i){
-    var d=document.createElement('div');d.className='tstep';
-    var is=s.type==='train'?'border-color:'+s.line.color+';background:'+s.line.color+'20;':'';
-    var ic=s.type==='train'?'train':s.type==='dest'?'dest':'walk';
-    var h='<div class="tstep-line"></div><div class="ticon '+ic+'" style="'+is+'">'+s.icon+'</div><div class="tc"><div class="tc-title">'+s.title+'</div><div class="tc-sub">'+s.sub+'</div>';
-    if(s.type==='train'){
-      h+='<div class="lpill" style="background:'+s.line.color+'18;color:'+s.line.color+';"><div class="ldot" style="background:'+s.line.color+';"></div>'+s.line.name+'</div>';
-      h+='<div class="scard"><div><div class="sname">🚉 '+s.board+'</div><div class="sref">Board here</div></div><div class="sbadge bon">Get on ↑</div></div>';
-      h+='<div class="scard" style="margin-top:8px;"><div><div class="sname">🚉 '+s.alight+'</div><div class="sref">Get off here</div></div><div class="sbadge boff">Get off ↓</div></div>';
-    }
-    h+='</div>';d.innerHTML=h;c.appendChild(d);
-  });
+  var ac=line.stations.indexOf(alight)-si;
+  var walkToMin=4+Math.round(Math.random()*7);
+  var rideMin=ac*2+Math.round(Math.random()*3);
+  var walkFromMin=3+Math.round(Math.random()*8);
+  var stLat=userLat+(spot.lat-userLat)*0.4;
+  var stLng=userLng+(spot.lng-userLng)*0.4;
+  trPlan={line:line,board:board,alight:alight,rideMin:rideMin,
+          walkToMin:walkToMin,walkFromMin:walkFromMin,
+          stLat:stLat,stLng:stLng,totalSteps:5};
+  trStepIdx=0;
+  showScreen('s-transit');
+  document.getElementById('tr-quit').textContent=lang==='ja'?'✕ 停止':'✕ Stop';
+  renderTrStep();
 }
 
+function setTrProgress(cur,total){
+  var pct=Math.round(((cur-1)/total)*100);
+  document.getElementById('tr-progress-bar').style.width=pct+'%';
+  var lbl=lang==='ja'?'ステップ'+cur+'/'+total:'Step '+cur+' of '+total;
+  document.getElementById('tr-step-label').textContent=lbl;
+}
+
+function renderTrStep(){
+  var p=trPlan;
+  stopWatch();
+  var c=document.getElementById('tr-step-content');
+  c.innerHTML='';
+
+  if(trStepIdx===0){
+    setTrProgress(1,5);
+    var lbl=lang==='ja'?p.board+'駅まで歩く':'Walk to '+p.board+' Station';
+    var sub=lang==='ja'?'徒歩約'+p.walkToMin+'分':'About '+p.walkToMin+' min walk';
+    buildWalkUI(c,lbl,sub,{lat:p.stLat,lng:p.stLng},function(){trStepIdx=1;renderTrStep();});
+    return;
+  }
+
+  if(trStepIdx===1){
+    setTrProgress(2,5);
+    var q=lang==='ja'?p.board+'駅に到着しましたか？':'Have you arrived at '+p.board+' Station?';
+    var sub=lang==='ja'?p.line.name+'に乗車（乗車時間：約'+p.rideMin+'分）':'Next: board the '+p.line.name+' ('+p.rideMin+' min ride)';
+    buildCheckUI(c,'🚉',q,sub,p.line,
+      function(){trStepIdx=2;renderTrStep();},
+      function(){trStepIdx=0;renderTrStep();});
+    return;
+  }
+
+  if(trStepIdx===2){
+    setTrProgress(3,5);
+    var title=lang==='ja'?p.line.name+'に乗車中':'Riding '+p.line.name;
+    var sub=lang==='ja'?p.alight+'駅で下車してください':'Get off at '+p.alight+' Station';
+    buildRidingUI(c,title,p.rideMin,sub,p.line,function(){trStepIdx=3;renderTrStep();});
+    return;
+  }
+
+  if(trStepIdx===3){
+    setTrProgress(4,5);
+    var q=lang==='ja'?p.alight+'駅に到着しましたか？':'Have you arrived at '+p.alight+' Station?';
+    var sub=lang==='ja'?'目的地まで徒歩約'+p.walkFromMin+'分':'About '+p.walkFromMin+' min walk to your secret spot';
+    buildCheckUI(c,'🚉',q,sub,p.line,
+      function(){trStepIdx=4;renderTrStep();},
+      function(){trStepIdx=2;renderTrStep();});
+    return;
+  }
+
+  if(trStepIdx===4){
+    setTrProgress(5,5);
+    var lbl=lang==='ja'?'秘密のスポットへ歩く':'Walk to your secret spot';
+    var sub=lang==='ja'?'徒歩約'+p.walkFromMin+'分':'About '+p.walkFromMin+' min walk';
+    buildWalkUI(c,lbl,sub,{lat:spot.lat,lng:spot.lng},function(){showArrived();});
+    return;
+  }
+}
+
+function buildWalkUI(container,title,subtitle,target,onArrive){
+  var stopLbl=lang==='ja'?'✕ 停止':'✕ Stop';
+  var hereLbl=lang==='ja'?'✓ 到着！':"✓ I'm here!";
+  container.innerHTML=
+    '<div class="trnav-walk">'+
+    '<div class="trnav-top">'+
+      '<div class="trnav-label">'+(lang==='ja'?'現在のステップ':'Current step')+'</div>'+
+      '<div class="trnav-title">'+title+'</div>'+
+      '<div class="trnav-meta">'+
+        '<span class="trnav-mi" id="tr-dist">📍 —</span>'+
+        '<span class="trnav-mi" id="tr-time">⏱ —</span>'+
+        '<span class="trnav-mi">🚶</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="arrow-stage" style="background:var(--dark);flex:1;">'+
+      '<svg class="c-ring" viewBox="0 0 60 60">'+
+        '<circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>'+
+        '<text x="30" y="11" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">N</text>'+
+        '<text x="30" y="53" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">S</text>'+
+        '<text x="7" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">W</text>'+
+        '<text x="53" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">E</text>'+
+        '<line id="tr-needle" x1="30" y1="30" x2="30" y2="8" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round"/>'+
+      '</svg>'+
+      '<div class="d-badge"><div class="d-num" id="tr-d-num">—</div><div class="d-unit" id="tr-d-unit">km</div></div>'+
+      '<div class="arrow-wrap">'+
+        '<div class="big-arrow" id="tr-arrow">'+
+          '<svg class="arrow-svg" viewBox="0 0 150 150">'+
+            '<defs><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1">'+
+              '<stop offset="0%" stop-color="#FFD93D"/><stop offset="100%" stop-color="#FF6B6B"/>'+
+            '</linearGradient></defs>'+
+            '<polygon points="75,14 122,82 94,82 94,138 56,138 56,82 28,82" fill="url(#ag2)"/>'+
+          '</svg>'+
+        '</div>'+
+        '<div class="dir-label" id="tr-dir">—</div>'+
+        '<div class="st-hint" id="tr-hint">—</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="nav-bot">'+
+      '<button class="nbtn nbtn-stop" onclick="goBack()">'+stopLbl+'</button>'+
+      '<button class="nbtn nbtn-arrived" id="tr-manual-btn">'+hereLbl+'</button>'+
+    '</div>'+
+    '</div>';
+  document.getElementById('tr-manual-btn').onclick=function(){stopWatch();if(onArrive)onArrive();};
+  startTrWalkWatch(target,onArrive);
+}
+
+function buildCheckUI(container,icon,question,subtitle,line,onYes,onNo){
+  var yesLbl=lang==='ja'?'はい、到着しました ✓':"Yes, I'm here ✓";
+  var noLbl=lang==='ja'?'まだです…':'Not yet…';
+  var pillHtml='';
+  if(line) pillHtml='<div class="check-line-pill" style="background:'+line.color+'18;color:'+line.color+'"><div class="check-dot" style="background:'+line.color+'"></div>'+line.name+'</div>';
+  container.innerHTML=
+    '<div class="trnav-check">'+
+      '<div class="check-icon">'+icon+'</div>'+
+      '<div class="check-title">'+question+'</div>'+
+      pillHtml+
+      '<div class="check-sub">'+subtitle+'</div>'+
+      '<div class="check-btns">'+
+        '<button class="check-btn-yes" id="tr-yes-btn">'+yesLbl+'</button>'+
+        '<button class="check-btn-no" id="tr-no-btn">'+noLbl+'</button>'+
+      '</div>'+
+    '</div>';
+  document.getElementById('tr-yes-btn').onclick=onYes;
+  document.getElementById('tr-no-btn').onclick=onNo;
+}
+
+function buildRidingUI(container,title,rideMin,subtitle,line,onNext){
+  var nextLbl=lang==='ja'?'下車しました ✓':"I've got off ✓";
+  container.innerHTML=
+    '<div class="trnav-riding">'+
+      '<div class="riding-icon">🚃</div>'+
+      '<div class="riding-title">'+title+'</div>'+
+      '<div class="check-line-pill" style="background:'+line.color+'18;color:'+line.color+'">'+
+        '<div class="check-dot" style="background:'+line.color+'"></div>'+line.name+
+      '</div>'+
+      '<div><div class="riding-time">'+rideMin+'</div><div class="riding-unit">'+(lang==='ja'?'分':'min')+'</div></div>'+
+      '<div class="riding-sub">'+subtitle+'</div>'+
+      '<button class="riding-btn" id="tr-ride-btn">'+nextLbl+'</button>'+
+    '</div>';
+  document.getElementById('tr-ride-btn').onclick=onNext;
+}
+
+function startTrWalkWatch(target,onArrive){
+  stopWatch();
+  trUpdateWalk(userLat,userLng,target,onArrive);
+  if(navigator.geolocation){
+    watchId=navigator.geolocation.watchPosition(
+      function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;trUpdateWalk(userLat,userLng,target,onArrive);},
+      function(){startTrSim(target,onArrive);},
+      {enableHighAccuracy:true,maximumAge:2000}
+    );
+  } else { startTrSim(target,onArrive); }
+}
+function startTrSim(target,onArrive){
+  trSimLat2=userLat;trSimLng2=userLng;
+  simTimer=setInterval(function(){
+    var b=bear(trSimLat2,trSimLng2,target.lat,target.lng);
+    trSimLat2+=0.00025*Math.cos(b*Math.PI/180);
+    trSimLng2+=0.00025*Math.sin(b*Math.PI/180);
+    trUpdateWalk(trSimLat2,trSimLng2,target,onArrive);
+  },1500);
+}
+function trUpdateWalk(lat,lng,target,onArrive){
+  var dist=hav(lat,lng,target.lat,target.lng);
+  var b=bear(lat,lng,target.lat,target.lng);
+  var mins=Math.max(1,Math.round(dist/4.5*60));
+  var dirs=T[lang].dirNames;
+  var hints=T[lang].hints;
+  var el;
+  el=document.getElementById('tr-arrow'); if(el) el.style.transform='rotate('+b+'deg)';
+  el=document.getElementById('tr-dir'); if(el) el.textContent=(lang==='ja'?'':'Head ')+dirs[Math.round(b/45)%8]+(lang==='ja'?'へ':'');
+  el=document.getElementById('tr-hint'); if(el) el.textContent=hints[Math.floor(b/45)%8];
+  el=document.getElementById('tr-d-num'); if(el) el.textContent=dist>1?dist.toFixed(1):Math.round(dist*1000);
+  el=document.getElementById('tr-d-unit'); if(el) el.textContent=dist>1?'km':'m';
+  el=document.getElementById('tr-dist'); if(el) el.textContent='📍 '+dist.toFixed(2)+'km';
+  el=document.getElementById('tr-time'); if(el) el.textContent='⏱ ~'+mins+(lang==='ja'?'分':' min');
+  var needle=document.getElementById('tr-needle');
+  if(needle){var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
+  if(dist<0.04 && onArrive){stopWatch();onArrive();}
+}
+
+// ============ ARRIVED ============
 function showArrived(){
   stopWatch();
   showScreen('s-arrived');
-  document.getElementById('arr-spot').textContent=spot?spot.name:'';
-  document.getElementById('arr-hint').textContent=spot?spot.hint:'';
+  document.getElementById('arr-title').textContent=tx('arrTitle');
+  document.getElementById('arr-hlabel').textContent=tx('arrHlabel');
+  document.getElementById('arr-sub').textContent=tx('arrSub');
+  document.getElementById('arr-btn').textContent=tx('arrBtn');
+  if(spot){
+    var d=lang==='ja'?spot.ja:spot.en;
+    document.getElementById('arr-spot').textContent=d.name;
+    document.getElementById('arr-hint').textContent=d.hint;
+  }
 }
-function goBack(){stopWatch();showScreen('s-setup');}
-
-startGeo();
+function goBack(){stopWatch();showScreen('s-chat');}
 </script>
 </body>
 </html>
