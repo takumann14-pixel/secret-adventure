@@ -921,17 +921,19 @@ function startAdventure(){
   },2800);
 }
 
-// ======== PLACES API ========
+// ======== PLACES API (NEW) ========
 var PLACES_KEY='AIzaSyCnKUcMFVNBU8MnnKd0MFU6bexBVBLRsLE'; // ← ここにAPIキーを貼る
 
-// vibe × companion → Places API type list
+// Nearby Search (New): POST https://places.googleapis.com/v1/places:searchNearby
+// CORSはAPIキーに許可したオリジンから直接呼べる
+
 var PLACE_TYPES={
   explore:{
-    solo:['tourist_attraction','shrine','temple','museum'],
+    solo:['shrine','tourist_attraction','museum','art_gallery'],
     couple:['tourist_attraction','art_gallery','park','shrine'],
-    friends:['tourist_attraction','amusement_park','night_club','museum'],
+    friends:['tourist_attraction','amusement_park','museum','night_club'],
     family:['tourist_attraction','park','aquarium','zoo'],
-    kids:['amusement_park','aquarium','zoo','park'],
+    kids:['amusement_park','aquarium','zoo','playground'],
   },
   food:{
     solo:['cafe','bakery','restaurant','bar'],
@@ -948,108 +950,127 @@ var PLACE_TYPES={
     kids:['park','playground','amusement_park'],
   },
   random:{
-    solo:['point_of_interest','tourist_attraction','museum','art_gallery'],
-    couple:['point_of_interest','tourist_attraction','night_club','art_gallery'],
+    solo:['tourist_attraction','museum','art_gallery','point_of_interest'],
+    couple:['tourist_attraction','night_club','art_gallery','point_of_interest'],
     friends:['night_club','amusement_park','tourist_attraction','stadium'],
     family:['zoo','aquarium','amusement_park','tourist_attraction'],
     kids:['playground','amusement_park','aquarium','zoo'],
   },
 };
 
-function getPlaceTypes(){
+function getPlaceType(){
   var v=PLACE_TYPES[prefs.vibe]||PLACE_TYPES.explore;
   var types=v[prefs.companion]||v.solo;
-  // pick random type from list
   return types[Math.floor(Math.random()*types.length)];
 }
 
 function pickSpot(callback){
   if(!PLACES_KEY||PLACES_KEY==='YOUR_API_KEY'){
-    pickSpotFallback();
-    callback();
-    return;
+    pickSpotFallback(); callback(); return;
   }
-  // Show overlay
   var ov=document.getElementById('places-overlay');
   var st=document.getElementById('places-status');
-  ov.classList.remove('hidden');
-  st.textContent=lang==='ja'?'近くの場所を検索中…':'Searching nearby spots…';
+  if(ov) ov.classList.remove('hidden');
+  if(st) st.textContent=lang==='ja'?'近くの場所を検索中…':'Searching nearby spots…';
 
-  var type=getPlaceTypes();
-  var radius=Math.min(prefs.distance*1000, 50000);
+  var radius=Math.min(prefs.distance*1000,50000);
+  var type=getPlaceType();
 
-  // Google Maps JS SDK の PlacesService を使う
-  if(typeof google==='undefined'||!google.maps||!google.maps.places){
-    // SDKがまだロードされていない → ロード後に再試行
-    loadMapsSDK(function(){
-      doPlacesSearch(type, radius, ov, callback);
+  // Places API (New) — Nearby Search
+  fetch('https://places.googleapis.com/v1/places:searchNearby',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'X-Goog-Api-Key':PLACES_KEY,
+      'X-Goog-FieldMask':'places.id,places.displayName,places.location,places.formattedAddress,places.rating,places.userRatingCount,places.primaryTypeDisplayName'
+    },
+    body:JSON.stringify({
+      includedTypes:[type],
+      maxResultCount:20,
+      locationRestriction:{
+        circle:{
+          center:{latitude:userLat,longitude:userLng},
+          radius:radius
+        }
+      },
+      languageCode:lang
+    })
+  })
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(data){
+    if(ov) ov.classList.add('hidden');
+    var results=data.places||[];
+    if(results.length===0){ pickSpotFallback(); callback(); return; }
+
+    // 隠れた名所フィルタ: レビュー数が少ない＝知られていない場所を優先
+    var gems=results.filter(function(p){
+      return p.userRatingCount&&p.userRatingCount<500&&p.rating&&p.rating>=3.5;
     });
-  } else {
-    doPlacesSearch(type, radius, ov, callback);
-  }
-}
+    var pool=gems.length>=3?gems:results;
 
+    // 選んだ時間に合わせてランダムな距離・方向を生成
+    var minDist=prefs.distance*0.3;
+    var maxDist=prefs.distance;
+    var targetDist=minDist+Math.random()*(maxDist-minDist);
+    var angle=Math.random()*360;
+    var angleRad=angle*Math.PI/180;
 
-function loadMapsSDK(cb){
-  if(typeof google!=='undefined'&&google.maps){ cb(); return; }
-  var s=document.createElement('script');
-  s.src='https://maps.googleapis.com/maps/api/js?key='+PLACES_KEY+'&libraries=places&language='+(typeof lang!=='undefined'?lang:'ja');
-  s.async=true;
-  s.onload=cb;
-  s.onerror=function(){ cb(); }; // 失敗してもcallbackは呼ぶ
-  document.head.appendChild(s);
-}
+    // poolの中からランダムに1つ選ぶ
+    var pick=pool[Math.floor(Math.random()*Math.min(pool.length,10))];
+    var loc=pick.location;
+    var name=(pick.displayName&&pick.displayName.text)||pick.displayName||'Secret spot';
+    var addr=pick.formattedAddress||'';
+    var rating=pick.rating?pick.rating+'★':'';
+    var reviews=pick.userRatingCount?'('+pick.userRatingCount+')':'';
+    var typeLabel=(pick.primaryTypeDisplayName&&pick.primaryTypeDisplayName.text)||type;
 
-function doPlacesSearch(type, radius, ov, callback){
-  try{
-    var mapDiv=document.createElement('div');
-    var map=new google.maps.Map(mapDiv,{center:{lat:userLat,lng:userLng},zoom:15});
-    var service=new google.maps.places.PlacesService(map);
-    service.nearbySearch({
-      location:{lat:userLat,lng:userLng},
-      radius:radius,
-      type:type,
-      language:lang
-    }, function(results,status){
-      ov.classList.add('hidden');
-      if(status===google.maps.places.PlacesServiceStatus.OK&&results&&results.length>0){
-        // 隠れた名所フィルタ: レビュー数が少ない＝知られていない場所を優先
-        var gems=results.filter(function(p){
-          return p.user_ratings_total&&p.user_ratings_total<300&&p.rating&&p.rating>=3.5;
-        });
-        var pool=gems.length>=3?gems:results;
-        var pick=pool[Math.floor(Math.random()*Math.min(pool.length,8))];
-        var loc=pick.geometry.location;
-        spot={
-          lat:typeof loc.lat==='function'?loc.lat():loc.lat,
-          lng:typeof loc.lng==='function'?loc.lng():loc.lng,
-          en:{name:pick.name,desc:pick.vicinity||'A hidden local spot',hint:'Rated '+( pick.rating||'?')+'★ · '+( pick.user_ratings_total||0)+' reviews'},
-          ja:{name:pick.name,desc:pick.vicinity||'地元の隠れスポット',hint:'評価 '+(pick.rating||'?')+'★（'+(pick.user_ratings_total||0)+'件のレビュー）'},
-          placeId:pick.place_id,
-        };
-        callback();
-      } else {
-        pickSpotFallback(); callback();
-      }
-    });
-  } catch(e){
-    console.warn('Places search error:',e);
+    spot={
+      lat:loc.latitude,
+      lng:loc.longitude,
+      en:{
+        name:name,
+        desc:addr||'A hidden local spot',
+        hint:typeLabel+(rating?' · '+rating+' '+reviews:'')
+      },
+      ja:{
+        name:name,
+        desc:addr||'地元の隠れスポット',
+        hint:typeLabel+(rating?' · '+rating+' '+reviews:'')
+      },
+      placeId:pick.id,
+    };
+    callback();
+  })
+  .catch(function(e){
+    console.warn('Places API (New) error:',e);
     if(ov) ov.classList.add('hidden');
     pickSpotFallback(); callback();
-  }
+  });
 }
 
 function pickSpotFallback(){
-  // original hand-curated spots
   var vibeSpots=SPOTS[prefs.vibe]||SPOTS.explore;
   var compSpots=vibeSpots[prefs.companion]||vibeSpots.solo||[];
-  var maxDelta=prefs.distance/111;
-  var filtered=compSpots.filter(function(s){return Math.abs(s.dlat)<=maxDelta&&Math.abs(s.dlng)<=maxDelta;});
-  var pool=filtered.length>0?filtered:compSpots;
-  var s=pool[Math.floor(Math.random()*pool.length)];
+
+  // 時間×速度で計算済みのprefs.distanceを使い、ランダムな方向・距離を生成
+  var minDist=prefs.distance*0.3;
+  var maxDist=prefs.distance;
+  var targetDist=minDist+Math.random()*(maxDist-minDist);
+  var angle=Math.random()*360;
+  var angleRad=angle*Math.PI/180;
+  var dLat=(targetDist*Math.cos(angleRad))/111;
+  var dLng=(targetDist*Math.sin(angleRad))/(111*Math.cos(userLat*Math.PI/180));
+
+  // スポット情報はランダムに選ぶ
+  var s=compSpots[Math.floor(Math.random()*compSpots.length)];
   spot=JSON.parse(JSON.stringify(s));
-  spot.lat=userLat+spot.dlat;
-  spot.lng=userLng+spot.dlng;
+  spot.lat=userLat+dLat;
+  spot.lng=userLng+dLng;
+  spot.dlat=dLat;
+  spot.dlng=dLng;
 }
 
 // ============ MATH ============
