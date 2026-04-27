@@ -3,1103 +3,631 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Secret Adventure — Find your hidden spot</title>
-<meta name="description" content="A mystery navigation app that takes you to secret local spots. Walk, cycle, or take transit to somewhere unexpected.">
+<title>Secret Adventure</title>
 <meta name="theme-color" content="#0F0E17">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #FAFAF8;
-    --bg2: #F2F0EB;
-    --text: #1A1A1A;
-    --text2: #666;
-    --text3: #999;
-    --border: rgba(0,0,0,0.1);
-    --border2: rgba(0,0,0,0.18);
-    --dark: #0F0E17;
-    --gold: #FFD93D;
-    --red: #FF6B6B;
-    --radius: 12px;
-    --radius-lg: 18px;
-  }
+:root {
+  --bg: #FAFAF8; --bg2: #F2F0EB;
+  --text: #1A1A1A; --text2: #666; --text3: #999;
+  --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.2);
+  --dark: #0F0E17; --gold: #FFD93D; --red: #FF6B6B;
+  --r: 12px; --rl: 18px;
+}
 
-  html, body {
-    height: 100%;
-    font-family: 'DM Sans', sans-serif;
-    background: var(--dark);
-    color: var(--text);
-    overflow: hidden;
-  }
+html { height: 100%; }
+body {
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--dark);
+  color: var(--text);
+}
 
-  /* SHELL */
-  .shell {
-    height: 100dvh;
-    max-width: 430px;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-  }
+.shell {
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
 
-  /* STATUS BAR SPACER */
-  .status-bar {
-    height: env(safe-area-inset-top, 0px);
-    background: var(--dark);
-    flex-shrink: 0;
-  }
+/* ---- SCREENS: show/hide with display ---- */
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
 
-  /* SCREENS */
-  .screen {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    transform: translateX(100%);
-    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-    will-change: transform;
-  }
-  .screen.active {
-    transform: translateX(0);
-  }
-  .screen.behind {
-    transform: translateX(-30%);
-  }
+/* ======== SETUP ======== */
+#s-setup { background: var(--bg); }
 
-  /* ===================== SCREEN 1: SETUP ===================== */
-  #screen-setup { background: var(--bg); }
+.hero {
+  background: var(--dark);
+  padding: 3rem 1.5rem 2rem;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+.hero::before {
+  content:''; position:absolute; top:-80px; right:-80px;
+  width:240px; height:240px; border-radius:50%; background:rgba(255,107,107,0.12);
+}
+.hero-tag {
+  font-size:10px; letter-spacing:3px; color:var(--gold);
+  font-weight:500; margin-bottom:10px; text-transform:uppercase;
+  position:relative; z-index:1;
+}
+.hero-title {
+  font-family:'Playfair Display',serif; font-size:34px; color:#FFFFFE;
+  line-height:1.15; margin-bottom:8px; position:relative; z-index:1;
+}
+.hero-sub { font-size:14px; color:rgba(255,255,255,0.45); position:relative; z-index:1; }
 
-  .setup-hero {
-    background: var(--dark);
-    padding: 3rem 1.5rem 2rem;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .setup-hero::before {
-    content: '';
-    position: absolute;
-    top: -80px; right: -80px;
-    width: 240px; height: 240px;
-    border-radius: 50%;
-    background: rgba(255,107,107,0.12);
-  }
-  .setup-hero::after {
-    content: '';
-    position: absolute;
-    bottom: -50px; left: 10px;
-    width: 160px; height: 160px;
-    border-radius: 50%;
-    background: rgba(255,217,61,0.08);
-  }
-  .hero-tag {
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--gold);
-    font-weight: 500;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    position: relative;
-    z-index: 1;
-  }
-  .hero-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 34px;
-    color: #FFFFFE;
-    line-height: 1.15;
-    margin-bottom: 8px;
-    position: relative;
-    z-index: 1;
-  }
-  .hero-sub {
-    font-size: 14px;
-    color: rgba(255,255,255,0.45);
-    font-weight: 300;
-    position: relative;
-    z-index: 1;
-  }
+.loc-bar {
+  position:relative; z-index:1; margin-top:1.25rem;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px; padding:10px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+.loc-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.loc-dot.searching { background:var(--gold); animation:blink 1.4s ease-in-out infinite; }
+.loc-dot.ready     { background:#4ADE80; }
+.loc-dot.error     { background:var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+.loc-text { font-size:12px; color:rgba(255,255,255,0.6); }
 
-  /* Location bar */
-  .loc-bar {
-    position: relative;
-    z-index: 1;
-    margin-top: 1.25rem;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .loc-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition: background 0.3s;
-  }
-  .loc-dot.searching { background: var(--gold); animation: blink 1.4s ease-in-out infinite; }
-  .loc-dot.ready    { background: #4ADE80; }
-  .loc-dot.error    { background: var(--red); }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-  .loc-text { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.4; }
+.setup-body {
+  padding:1.75rem 1.5rem;
+  display:flex; flex-direction:column; gap:1.5rem; flex:1;
+}
+.flabel {
+  font-size:10px; font-weight:500; letter-spacing:1.5px;
+  text-transform:uppercase; color:var(--text3); margin-bottom:10px; display:block;
+}
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.chip {
+  padding:9px 16px; border-radius:100px; border:1px solid var(--border2);
+  font-size:13px; cursor:pointer; background:var(--bg); color:var(--text);
+  transition:all 0.15s; display:flex; align-items:center; gap:6px;
+  -webkit-tap-highlight-color:transparent;
+}
+.chip.on { background:var(--dark); color:#fff; border-color:var(--dark); }
 
-  .setup-body {
-    padding: 1.75rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    flex: 1;
-  }
+.slider-row { display:flex; align-items:center; gap:12px; }
+.slider-row input[type=range] {
+  flex:1; height:4px; -webkit-appearance:none; appearance:none;
+  background:var(--border2); border-radius:2px; outline:none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+  background:var(--dark); cursor:pointer; border:3px solid var(--bg);
+  box-shadow:0 0 0 1px var(--dark);
+}
+.sval { font-size:14px; font-weight:500; min-width:52px; text-align:right; }
 
-  .form-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text3);
-    margin-bottom: 10px;
-    display: block;
-  }
+.vgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.vcard {
+  border:1px solid var(--border); border-radius:var(--r);
+  padding:14px; cursor:pointer; background:var(--bg2);
+  transition:all 0.15s; -webkit-tap-highlight-color:transparent;
+}
+.vcard.on { border-color:var(--dark); background:#fff; }
+.vemoji { font-size:24px; margin-bottom:6px; }
+.vname  { font-size:14px; font-weight:500; color:var(--text); }
+.vdesc  { font-size:11px; color:var(--text3); margin-top:2px; }
 
-  /* chips */
-  .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
-  .chip {
-    padding: 9px 16px;
-    border-radius: 100px;
-    border: 1px solid var(--border2);
-    font-size: 13px;
-    cursor: pointer;
-    background: var(--bg);
-    color: var(--text);
-    transition: all 0.18s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .chip:active { transform: scale(0.96); }
-  .chip.selected {
-    background: var(--dark);
-    color: #fff;
-    border-color: var(--dark);
-  }
+.go-btn {
+  width:100%; padding:17px; background:var(--dark); color:#fff;
+  border:none; border-radius:var(--rl); font-size:16px; font-weight:500;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  gap:10px; font-family:'DM Sans',sans-serif; margin-top:0.5rem;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  /* slider */
-  .slider-row { display: flex; align-items: center; gap: 12px; }
-  .slider-row input[type=range] {
-    flex: 1;
-    height: 4px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: var(--border2);
-    border-radius: 2px;
-    outline: none;
-  }
-  .slider-row input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--dark);
-    cursor: pointer;
-    border: 3px solid var(--bg);
-    box-shadow: 0 0 0 1px var(--dark);
-  }
-  .slider-val {
-    font-size: 14px;
-    font-weight: 500;
-    min-width: 52px;
-    text-align: right;
-    color: var(--text);
-  }
+/* ======== LOADING ======== */
+#s-loading {
+  background:var(--dark); align-items:center;
+  justify-content:center; gap:2rem;
+}
+.compass {
+  width:90px; height:90px; border:1.5px solid rgba(255,255,255,0.12);
+  border-radius:50%; position:relative; animation:spin 3s linear infinite;
+}
+.compass::before {
+  content:''; position:absolute; top:50%; left:50%;
+  width:2px; height:34px; background:var(--red);
+  transform:translate(-50%,-100%); transform-origin:bottom; border-radius:1px;
+}
+.compass::after {
+  content:''; position:absolute; top:50%; left:50%;
+  width:2px; height:24px; background:rgba(255,255,255,0.3);
+  transform:translate(-50%,0); transform-origin:top; border-radius:1px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.load-title { font-family:'Playfair Display',serif; font-size:24px; color:#fff; text-align:center; }
+.dots { display:flex; justify-content:center; gap:6px; margin-top:14px; }
+.dots span {
+  width:6px; height:6px; background:var(--gold); border-radius:50%;
+  animation:dp 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
+@keyframes dp { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+.load-sub { font-size:14px; color:rgba(255,255,255,.5); text-align:center; margin-top:8px; }
 
-  /* vibe grid */
-  .vibe-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .vibe-card {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    cursor: pointer;
-    transition: all 0.18s;
-    background: var(--bg2);
-    -webkit-tap-highlight-color: transparent;
-  }
-  .vibe-card:active { transform: scale(0.97); }
-  .vibe-card.selected {
-    border-color: var(--dark);
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  }
-  .vibe-emoji { font-size: 24px; margin-bottom: 6px; }
-  .vibe-name { font-size: 14px; font-weight: 500; color: var(--text); }
-  .vibe-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+/* ======== NAV (walk/cycle) ======== */
+#s-nav { background:var(--dark); }
 
-  /* go button */
-  .go-btn {
-    width: 100%;
-    padding: 17px;
-    background: var(--dark);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-family: 'DM Sans', sans-serif;
-    transition: opacity 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    margin-top: 0.5rem;
-  }
-  .go-btn:active { transform: scale(0.97); opacity: 0.88; }
+.nav-top {
+  padding:1.5rem 1.5rem 1rem;
+  border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0;
+}
+.nav-dlabel { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:4px; }
+.nav-dname  { font-family:'Playfair Display',serif; font-size:22px; color:#fff; margin-bottom:8px; }
+.nav-meta   { display:flex; gap:14px; flex-wrap:wrap; }
+.nav-mi     { font-size:13px; color:rgba(255,255,255,.5); }
 
-  /* ===================== SCREEN 2: LOADING ===================== */
-  #screen-loading {
-    background: var(--dark);
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-  }
-  .compass-wrap { position: relative; }
-  .compass {
-    width: 90px; height: 90px;
-    border: 1.5px solid rgba(255,255,255,0.12);
-    border-radius: 50%;
-    position: relative;
-    animation: spin 3s linear infinite;
-  }
-  .compass::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 2px; height: 34px;
-    background: var(--red);
-    transform: translate(-50%, -100%);
-    transform-origin: bottom;
-    border-radius: 1px;
-  }
-  .compass::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 2px; height: 24px;
-    background: rgba(255,255,255,0.3);
-    transform: translate(-50%, 0);
-    transform-origin: top;
-    border-radius: 1px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    color: #fff;
-    text-align: center;
-  }
-  .loading-dots {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 14px;
-  }
-  .loading-dots span {
-    width: 6px; height: 6px;
-    background: var(--gold);
-    border-radius: 50%;
-    animation: dotpulse 1.2s ease-in-out infinite;
-  }
-  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dotpulse { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
-  .loading-sub {
-    font-size: 14px;
-    color: rgba(255,255,255,0.5);
-    text-align: center;
-    font-weight: 300;
-    margin-top: 8px;
-    transition: opacity 0.4s;
-  }
+.arrow-stage {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  position:relative; padding:5rem 1rem 1rem;
+}
+.c-ring { position:absolute; top:1rem; left:1rem; width:60px; height:60px; }
+.d-badge {
+  position:absolute; top:1rem; right:1rem;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r); padding:10px 14px; text-align:center;
+}
+.d-num  { font-size:24px; font-weight:500; color:var(--gold); line-height:1; }
+.d-unit { font-size:11px; color:rgba(255,255,255,.35); margin-top:3px; }
 
-  /* ===================== SCREEN 3: NAV (walk/cycle) ===================== */
-  #screen-nav { background: var(--dark); overflow: hidden; }
+.arrow-wrap { display:flex; flex-direction:column; align-items:center; gap:1.25rem; }
+.big-arrow  { transition:transform .5s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 0 40px rgba(255,217,61,.25)); }
+.arrow-svg  { width:150px; height:150px; }
+.dir-label  { font-family:'Playfair Display',serif; font-size:24px; color:#fff; }
+.st-hint    { font-size:13px; color:rgba(255,255,255,.45); text-align:center; max-width:220px; }
 
-  .nav-top {
-    padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    flex-shrink: 0;
-  }
-  .nav-dest-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin-bottom: 4px;
-  }
-  .nav-dest-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-  .nav-meta {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .nav-meta-item {
-    font-size: 13px;
-    color: rgba(255,255,255,0.5);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
+.nav-bot {
+  padding:1rem 1.5rem 1.5rem;
+  border-top:1px solid rgba(255,255,255,.07);
+  display:flex; gap:12px; flex-shrink:0;
+}
+.nbtn {
+  flex:1; padding:14px; border-radius:var(--r); font-size:14px; font-weight:500;
+  cursor:pointer; font-family:'DM Sans',sans-serif; border:none;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  -webkit-tap-highlight-color:transparent;
+}
+.nbtn-stop    { background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); }
+.nbtn-arrived { background:var(--red); color:#fff; }
 
-  .arrow-stage {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 1rem;
-  }
+/* ======== TRANSIT ======== */
+#s-transit { background:var(--bg); }
 
-  /* compass ring top-left */
-  .compass-ring {
-    position: absolute;
-    top: 1rem; left: 1rem;
-    width: 60px; height: 60px;
-  }
+.tr-header { background:var(--dark); padding:2rem 1.5rem 1.25rem; flex-shrink:0; }
+.tr-dlabel { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:4px; }
+.tr-dname  { font-family:'Playfair Display',serif; font-size:22px; color:#fff; margin-bottom:14px; }
+.tr-summ   { display:flex; gap:1px; background:rgba(255,255,255,.08); border-radius:var(--r); overflow:hidden; }
+.tsi { flex:1; padding:12px; background:rgba(255,255,255,.05); text-align:center; }
+.tsi-val { font-size:20px; font-weight:500; color:#fff; }
+.tsi-lab { font-size:10px; color:rgba(255,255,255,.4); margin-top:2px; }
 
-  /* distance badge top-right */
-  .dist-badge {
-    position: absolute;
-    top: 1rem; right: 1rem;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    text-align: center;
-  }
-  .dist-num { font-size: 24px; font-weight: 500; color: var(--gold); line-height: 1; }
-  .dist-unit { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+.tr-body { padding:1.5rem; flex:1; overflow-y:auto; display:flex; flex-direction:column; }
 
-  /* big directional arrow */
-  .arrow-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.25rem;
-  }
-  .big-arrow {
-    transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
-    filter: drop-shadow(0 0 40px rgba(255,217,61,0.25));
-  }
-  .arrow-svg { width: 150px; height: 150px; }
+.tstep { display:flex; gap:14px; position:relative; padding-bottom:1.25rem; }
+.tstep-line {
+  position:absolute; left:19px; top:42px; bottom:0; width:2px;
+  background:var(--border);
+}
+.ticon {
+  width:40px; height:40px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px; flex-shrink:0; position:relative; z-index:1;
+}
+.ticon.walk { background:rgba(255,217,61,.12); border:1px solid rgba(255,217,61,.3); }
+.ticon.dest { background:rgba(255,107,107,.12); border:2px solid var(--red); }
+.ticon.train { border:2px solid; }
 
-  .direction-label {
-    font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    color: #fff;
-  }
-  .street-hint {
-    font-size: 13px;
-    color: rgba(255,255,255,0.45);
-    text-align: center;
-    max-width: 220px;
-    line-height: 1.5;
-  }
+.tc { flex:1; }
+.tc-title { font-size:15px; font-weight:500; color:var(--text); margin-bottom:2px; }
+.tc-sub   { font-size:12px; color:var(--text2); line-height:1.5; }
+.lpill {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 10px; border-radius:100px;
+  font-size:12px; font-weight:500; margin-top:8px;
+}
+.ldot { width:8px; height:8px; border-radius:50%; }
+.scard {
+  margin-top:8px; border:1px solid var(--border);
+  border-radius:var(--r); padding:12px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--bg2);
+}
+.sname { font-size:15px; font-weight:500; color:var(--text); }
+.sref  { font-size:11px; color:var(--text3); margin-top:2px; }
+.sbadge { padding:5px 12px; border-radius:100px; font-size:11px; font-weight:500; }
+.bon  { background:#D1F4E7; color:#0A6640; }
+.boff { background:#FFE0E0; color:#8B2020; }
 
-  .nav-bottom {
-    padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid rgba(255,255,255,0.07);
-    display: flex;
-    gap: 12px;
-    flex-shrink: 0;
-  }
-  .nav-btn {
-    flex: 1; padding: 14px;
-    border-radius: var(--radius);
-    font-size: 14px; font-weight: 500;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    border: none;
-    display: flex; align-items: center;
-    justify-content: center; gap: 6px;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .nav-btn:active { transform: scale(0.96); opacity: 0.8; }
-  .nav-btn-stop { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
-  .nav-btn-arrived { background: var(--red); color: #fff; }
+.tr-foot {
+  padding:1rem 1.5rem 1.5rem;
+  border-top:1px solid var(--border);
+  display:flex; gap:12px; flex-shrink:0; background:var(--bg);
+}
+.tbtn {
+  flex:1; padding:14px; border-radius:var(--r); font-size:14px; font-weight:500;
+  cursor:pointer; font-family:'DM Sans',sans-serif; border:none;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  -webkit-tap-highlight-color:transparent;
+}
+.tbtn-back { background:var(--bg2); color:var(--text); border:1px solid var(--border2); }
+.tbtn-go   { background:var(--dark); color:#fff; }
 
-  /* ===================== SCREEN 4: TRANSIT ===================== */
-  #screen-transit { background: var(--bg); }
+/* ======== ARRIVED ======== */
+#s-arrived {
+  background:var(--dark); align-items:center;
+  justify-content:center; gap:1.5rem; padding:2rem; text-align:center;
+}
+.arr-emoji { font-size:64px; animation:popIn .6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popIn { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
+.arr-title { font-family:'Playfair Display',serif; font-size:30px; color:#fff; }
+.arr-spot  { font-size:17px; color:var(--gold); font-weight:500; }
+.arr-hint  {
+  background:rgba(255,217,61,.08); border:1px solid rgba(255,217,61,.2);
+  border-radius:var(--rl); padding:16px 20px; max-width:300px; text-align:left;
+}
+.arr-hlabel { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.arr-htext  { font-size:14px; color:rgba(255,255,255,.7); line-height:1.6; }
+.arr-sub { font-size:13px; color:rgba(255,255,255,.35); max-width:240px; line-height:1.6; }
+.arr-btn {
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
+  color:#fff; padding:14px 28px; border-radius:var(--rl);
+  font-size:15px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
 
-  .transit-header {
-    background: var(--dark);
-    padding: 2rem 1.5rem 1.25rem;
-    flex-shrink: 0;
-  }
-  .transit-dest-label {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin-bottom: 4px;
-  }
-  .transit-dest-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: #fff;
-    margin-bottom: 14px;
-  }
-  .transit-summary {
-    display: flex;
-    gap: 1px;
-    background: rgba(255,255,255,0.08);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .tsumm-item {
-    flex: 1;
-    padding: 12px;
-    background: rgba(255,255,255,0.05);
-    text-align: center;
-  }
-  .tsumm-val { font-size: 20px; font-weight: 500; color: #fff; }
-  .tsumm-label { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; letter-spacing: 0.5px; }
-
-  .transit-body {
-    padding: 1.5rem;
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* step list */
-  .t-step {
-    display: flex;
-    gap: 14px;
-    position: relative;
-    padding-bottom: 1.25rem;
-  }
-  .t-step:not(:last-child) .t-step-line {
-    position: absolute;
-    left: 19px;
-    top: 42px;
-    width: 2px;
-    bottom: 0;
-    background: var(--border);
-  }
-  .t-icon {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    display: flex; align-items: center;
-    justify-content: center;
-    font-size: 17px;
-    flex-shrink: 0;
-    position: relative; z-index: 1;
-  }
-  .t-icon.walk { background: rgba(255,217,61,0.12); border: 1px solid rgba(255,217,61,0.3); }
-  .t-icon.dest { background: rgba(255,107,107,0.12); border: 2px solid var(--red); }
-  .t-icon.train { border: 2px solid; }
-
-  .t-content { flex: 1; }
-  .t-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-  .t-sub { font-size: 12px; color: var(--text2); line-height: 1.5; }
-
-  .line-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 8px;
-  }
-  .line-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-  .station-card {
-    margin-top: 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--bg2);
-  }
-  .station-name { font-size: 15px; font-weight: 500; color: var(--text); }
-  .station-line-ref { font-size: 11px; color: var(--text3); margin-top: 2px; }
-  .station-badge {
-    padding: 5px 12px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  .badge-on  { background: #D1F4E7; color: #0A6640; }
-  .badge-off { background: #FFE0E0; color: #8B2020; }
-
-  .transit-footer {
-    padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    flex-shrink: 0;
-    background: var(--bg);
-  }
-  .t-btn {
-    flex: 1; padding: 14px;
-    border-radius: var(--radius);
-    font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: 'DM Sans', sans-serif;
-    border: none; display: flex;
-    align-items: center; justify-content: center;
-    gap: 6px; transition: opacity 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .t-btn:active { transform: scale(0.96); opacity: 0.8; }
-  .t-btn-back { background: var(--bg2); color: var(--text); border: 1px solid var(--border2); }
-  .t-btn-go   { background: var(--dark); color: #fff; }
-
-  /* ===================== SCREEN 5: ARRIVED ===================== */
-  #screen-arrived {
-    background: var(--dark);
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    padding: 2rem;
-    text-align: center;
-  }
-  .arrived-emoji {
-    font-size: 64px;
-    animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes popIn { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0deg)} }
-  .arrived-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 30px;
-    color: #fff;
-  }
-  .arrived-spot-name { font-size: 17px; color: var(--gold); font-weight: 500; }
-  .arrived-hint-box {
-    background: rgba(255,217,61,0.08);
-    border: 1px solid rgba(255,217,61,0.2);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    max-width: 300px;
-    text-align: left;
-  }
-  .arrived-hint-label {
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 8px;
-  }
-  .arrived-hint-text {
-    font-size: 14px;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.6;
-  }
-  .arrived-sub { font-size: 13px; color: rgba(255,255,255,0.35); max-width: 240px; line-height: 1.6; }
-  .arrived-btn {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #fff;
-    padding: 14px 28px;
-    border-radius: var(--radius-lg);
-    font-size: 15px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .arrived-btn:active { transform: scale(0.96); opacity: 0.8; }
-
-  /* DESKTOP CENTERING */
-  @media (min-width: 500px) {
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .shell {
-      height: 90vh;
-      max-height: 860px;
-      border-radius: 36px;
-      overflow: hidden;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-    }
-  }
+@media(min-width:500px){
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .shell { min-height:auto; height:90vh; max-height:860px; border-radius:36px; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.5); }
+  .screen { min-height:auto; height:100%; }
+  #s-loading, #s-arrived { height:100%; }
+}
 </style>
 </head>
 <body>
-
 <div class="shell">
-  <div class="status-bar"></div>
 
-  <!-- ===== SETUP ===== -->
-  <div class="screen active" id="screen-setup">
-    <div class="setup-hero">
-      <div class="hero-tag">Secret Adventure</div>
-      <div class="hero-title">Where do you<br>want to go?</div>
-      <div class="hero-sub">We'll take you somewhere unexpected.</div>
-      <div class="loc-bar">
-        <div class="loc-dot searching" id="loc-dot"></div>
-        <div class="loc-text" id="loc-text">Getting your location…</div>
-      </div>
-    </div>
-    <div class="setup-body">
-
-      <div>
-        <span class="form-label">How are you getting there?</span>
-        <div class="chip-group" id="transport-group">
-          <div class="chip selected" data-val="walking"  onclick="pickChip(this,'transport-group')">🚶 Walking</div>
-          <div class="chip"          data-val="cycling"  onclick="pickChip(this,'transport-group')">🚲 Cycling</div>
-          <div class="chip"          data-val="transit"  onclick="pickChip(this,'transport-group')">🚃 Transit</div>
-        </div>
-      </div>
-
-      <div>
-        <span class="form-label">Max distance</span>
-        <div class="slider-row">
-          <input type="range" id="sl-dist" min="1" max="20" value="5" step="1"
-            oninput="syncSlider('sl-dist','sv-dist',v=>v+'km');prefs.distance=+v">
-          <div class="slider-val" id="sv-dist">5km</div>
-        </div>
-      </div>
-
-      <div>
-        <span class="form-label">Time available</span>
-        <div class="slider-row">
-          <input type="range" id="sl-time" min="30" max="300" value="90" step="30"
-            oninput="syncSlider('sl-time','sv-time',v=>v>=60?(Math.floor(v/60)+'h'+(v%60?' '+v%60+'m':'')):(v+'m'));prefs.time=+v">
-          <div class="slider-val" id="sv-time">1h 30m</div>
-        </div>
-      </div>
-
-      <div>
-        <span class="form-label">What's your vibe?</span>
-        <div class="vibe-grid" id="vibe-group">
-          <div class="vibe-card selected" data-val="explore" onclick="pickCard(this,'vibe-group')">
-            <div class="vibe-emoji">🗺️</div>
-            <div class="vibe-name">Explore</div>
-            <div class="vibe-desc">Hidden gems & local secrets</div>
-          </div>
-          <div class="vibe-card" data-val="food" onclick="pickCard(this,'vibe-group')">
-            <div class="vibe-emoji">🍜</div>
-            <div class="vibe-name">Eat</div>
-            <div class="vibe-desc">Local food & drink</div>
-          </div>
-          <div class="vibe-card" data-val="relax" onclick="pickCard(this,'vibe-group')">
-            <div class="vibe-emoji">🌿</div>
-            <div class="vibe-name">Chill</div>
-            <div class="vibe-desc">Parks, cafes & calm spots</div>
-          </div>
-          <div class="vibe-card" data-val="random" onclick="pickCard(this,'vibe-group')">
-            <div class="vibe-emoji">🎲</div>
-            <div class="vibe-name">Surprise</div>
-            <div class="vibe-desc">Totally random</div>
-          </div>
-        </div>
-      </div>
-
-      <button class="go-btn" onclick="startAdventure()">🗝️ Find my secret spot</button>
+<!-- SETUP -->
+<div class="screen active" id="s-setup">
+  <div class="hero">
+    <div class="hero-tag">Secret Adventure</div>
+    <div class="hero-title">Where do you<br>want to go?</div>
+    <div class="hero-sub">We'll take you somewhere unexpected.</div>
+    <div class="loc-bar">
+      <div class="loc-dot searching" id="loc-dot"></div>
+      <div class="loc-text" id="loc-text">Getting your location…</div>
     </div>
   </div>
-
-  <!-- ===== LOADING ===== -->
-  <div class="screen" id="screen-loading">
-    <div class="compass"></div>
-    <div class="loading-title">Searching for secrets…</div>
-    <div class="loading-dots"><span></span><span></span><span></span></div>
-    <div class="loading-sub" id="loading-msg">Scanning nearby hidden spots</div>
-  </div>
-
-  <!-- ===== NAV (walk / cycle) ===== -->
-  <div class="screen" id="screen-nav">
-    <div class="nav-top">
-      <div class="nav-dest-label">Secret destination</div>
-      <div class="nav-dest-name">Secret spot ahead</div>
-      <div class="nav-meta">
-        <div class="nav-meta-item" id="nm-dist">📍 —</div>
-        <div class="nav-meta-item" id="nm-time">⏱ —</div>
-        <div class="nav-meta-item" id="nm-mode">🚶 Walking</div>
+  <div class="setup-body">
+    <div>
+      <span class="flabel">How are you getting there?</span>
+      <div class="chips" id="g-transport">
+        <div class="chip on"  data-val="walking"  onclick="pick(this,'g-transport')">🚶 Walking</div>
+        <div class="chip"     data-val="cycling"  onclick="pick(this,'g-transport')">🚲 Cycling</div>
+        <div class="chip"     data-val="transit"  onclick="pick(this,'g-transport')">🚃 Transit</div>
       </div>
     </div>
-
-    <div class="arrow-stage">
-      <!-- compass ring -->
-      <svg class="compass-ring" viewBox="0 0 60 60">
-        <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-        <text x="30" y="11"  text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
-        <text x="30" y="53" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">S</text>
-        <text x="7"  y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">W</text>
-        <text x="53" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">E</text>
-        <line id="c-needle" x1="30" y1="30" x2="30" y2="8" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-
-      <!-- distance badge -->
-      <div class="dist-badge">
-        <div class="dist-num" id="dist-num">—</div>
-        <div class="dist-unit" id="dist-unit">km</div>
+    <div>
+      <span class="flabel">Max distance</span>
+      <div class="slider-row">
+        <input type="range" id="sl-dist" min="1" max="20" value="5" step="1"
+          oninput="document.getElementById('sv-dist').textContent=this.value+'km';prefs.distance=+this.value">
+        <div class="sval" id="sv-dist">5km</div>
       </div>
-
-      <!-- arrow -->
-      <div class="arrow-wrap">
-        <div class="big-arrow" id="big-arrow">
-          <svg class="arrow-svg" viewBox="0 0 150 150">
-            <defs>
-              <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#FFD93D"/>
-                <stop offset="100%" stop-color="#FF6B6B"/>
-              </linearGradient>
-            </defs>
-            <polygon points="75,14 122,82 94,82 94,138 56,138 56,82 28,82" fill="url(#ag)" rx="4"/>
-          </svg>
+    </div>
+    <div>
+      <span class="flabel">Time available</span>
+      <div class="slider-row">
+        <input type="range" id="sl-time" min="30" max="300" value="90" step="30"
+          oninput="var v=+this.value;document.getElementById('sv-time').textContent=v>=60?(Math.floor(v/60)+'h'+(v%60?' '+v%60+'m':'')):(v+'m');prefs.time=v">
+        <div class="sval" id="sv-time">1h 30m</div>
+      </div>
+    </div>
+    <div>
+      <span class="flabel">What's your vibe?</span>
+      <div class="vgrid" id="g-vibe">
+        <div class="vcard on" data-val="explore" onclick="pickV(this,'g-vibe')">
+          <div class="vemoji">🗺️</div><div class="vname">Explore</div><div class="vdesc">Hidden gems</div>
         </div>
-        <div class="direction-label" id="dir-label">Calculating…</div>
-        <div class="street-hint" id="street-hint">Getting your heading</div>
+        <div class="vcard" data-val="food" onclick="pickV(this,'g-vibe')">
+          <div class="vemoji">🍜</div><div class="vname">Eat</div><div class="vdesc">Local food</div>
+        </div>
+        <div class="vcard" data-val="relax" onclick="pickV(this,'g-vibe')">
+          <div class="vemoji">🌿</div><div class="vname">Chill</div><div class="vdesc">Parks & cafes</div>
+        </div>
+        <div class="vcard" data-val="random" onclick="pickV(this,'g-vibe')">
+          <div class="vemoji">🎲</div><div class="vname">Surprise</div><div class="vdesc">Totally random</div>
+        </div>
       </div>
     </div>
-
-    <div class="nav-bottom">
-      <button class="nav-btn nav-btn-stop"    onclick="goBack()">✕ Stop</button>
-      <button class="nav-btn nav-btn-arrived" onclick="showArrived()">✓ I'm here!</button>
-    </div>
-  </div>
-
-  <!-- ===== TRANSIT ===== -->
-  <div class="screen" id="screen-transit">
-    <div class="transit-header">
-      <div class="transit-dest-label">Secret destination</div>
-      <div class="transit-dest-name">Secret spot</div>
-      <div class="transit-summary">
-        <div class="tsumm-item"><div class="tsumm-val" id="tt-total">—</div><div class="tsumm-label">Total</div></div>
-        <div class="tsumm-item"><div class="tsumm-val" id="tt-xfer">0</div><div class="tsumm-label">Transfers</div></div>
-        <div class="tsumm-item"><div class="tsumm-val" id="tt-walk">—</div><div class="tsumm-label">Walking</div></div>
-      </div>
-    </div>
-    <div class="transit-body" id="transit-steps"></div>
-    <div class="transit-footer">
-      <button class="t-btn t-btn-back" onclick="goBack()">← Back</button>
-      <button class="t-btn t-btn-go"   onclick="showArrived()">✓ Arrived!</button>
-    </div>
-  </div>
-
-  <!-- ===== ARRIVED ===== -->
-  <div class="screen" id="screen-arrived">
-    <div class="arrived-emoji">🎉</div>
-    <div class="arrived-title">You made it!</div>
-    <div class="arrived-spot-name" id="arr-spot"></div>
-    <div class="arrived-hint-box">
-      <div class="arrived-hint-label">Insider tip</div>
-      <div class="arrived-hint-text" id="arr-hint"></div>
-    </div>
-    <div class="arrived-sub">Look around — you're somewhere most people never find.</div>
-    <button class="arrived-btn" onclick="goBack()">🗝️ Find another spot</button>
+    <button class="go-btn" onclick="startAdventure()">🗝️ Find my secret spot</button>
   </div>
 </div>
 
+<!-- LOADING -->
+<div class="screen" id="s-loading">
+  <div class="compass"></div>
+  <div class="load-title">Searching for secrets…</div>
+  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="load-sub" id="load-msg">Scanning nearby hidden spots</div>
+</div>
+
+<!-- NAV -->
+<div class="screen" id="s-nav">
+  <div class="nav-top">
+    <div class="nav-dlabel">Secret destination</div>
+    <div class="nav-dname">Secret spot ahead</div>
+    <div class="nav-meta">
+      <span class="nav-mi" id="nm-dist">📍 —</span>
+      <span class="nav-mi" id="nm-time">⏱ —</span>
+      <span class="nav-mi" id="nm-mode">🚶 Walking</span>
+    </div>
+  </div>
+  <div class="arrow-stage">
+    <svg class="c-ring" viewBox="0 0 60 60">
+      <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <text x="30" y="11"  text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">N</text>
+      <text x="30" y="53" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">S</text>
+      <text x="7"  y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">W</text>
+      <text x="53" y="33" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="DM Sans">E</text>
+      <line id="c-needle" x1="30" y1="30" x2="30" y2="8" stroke="#FF6B6B" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="d-badge">
+      <div class="d-num"  id="d-num">—</div>
+      <div class="d-unit" id="d-unit">km</div>
+    </div>
+    <div class="arrow-wrap">
+      <div class="big-arrow" id="big-arrow">
+        <svg class="arrow-svg" viewBox="0 0 150 150">
+          <defs>
+            <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FFD93D"/>
+              <stop offset="100%" stop-color="#FF6B6B"/>
+            </linearGradient>
+          </defs>
+          <polygon points="75,14 122,82 94,82 94,138 56,138 56,82 28,82" fill="url(#ag)"/>
+        </svg>
+      </div>
+      <div class="dir-label" id="dir-label">Calculating…</div>
+      <div class="st-hint"   id="st-hint">Getting your heading</div>
+    </div>
+  </div>
+  <div class="nav-bot">
+    <button class="nbtn nbtn-stop"    onclick="goBack()">✕ Stop</button>
+    <button class="nbtn nbtn-arrived" onclick="showArrived()">✓ I'm here!</button>
+  </div>
+</div>
+
+<!-- TRANSIT -->
+<div class="screen" id="s-transit">
+  <div class="tr-header">
+    <div class="tr-dlabel">Secret destination</div>
+    <div class="tr-dname">Secret spot</div>
+    <div class="tr-summ">
+      <div class="tsi"><div class="tsi-val" id="tt-tot">—</div><div class="tsi-lab">Total</div></div>
+      <div class="tsi"><div class="tsi-val" id="tt-xfr">0</div><div class="tsi-lab">Transfers</div></div>
+      <div class="tsi"><div class="tsi-val" id="tt-wlk">—</div><div class="tsi-lab">Walking</div></div>
+    </div>
+  </div>
+  <div class="tr-body" id="tr-steps"></div>
+  <div class="tr-foot">
+    <button class="tbtn tbtn-back" onclick="goBack()">← Back</button>
+    <button class="tbtn tbtn-go"   onclick="showArrived()">✓ Arrived!</button>
+  </div>
+</div>
+
+<!-- ARRIVED -->
+<div class="screen" id="s-arrived">
+  <div class="arr-emoji">🎉</div>
+  <div class="arr-title">You made it!</div>
+  <div class="arr-spot" id="arr-spot"></div>
+  <div class="arr-hint">
+    <div class="arr-hlabel">Insider tip</div>
+    <div class="arr-htext" id="arr-hint"></div>
+  </div>
+  <div class="arr-sub">Look around — you're somewhere most people never find.</div>
+  <button class="arr-btn" onclick="goBack()">🗝️ Find another spot</button>
+</div>
+
+</div><!-- /shell -->
+
 <script>
-/* ─── DATA ─── */
-const LINES = [
-  { name:'Odakyu Line',             color:'#0072BC', stations:['Shinjuku','Yoyogi-uehara','Shimokitazawa','Setagaya-daita','Gotokuji','Kyodo','Soshigaya-okura','Chitose-funabashi','Atsugi','Odawara'] },
-  { name:'Keio Line',               color:'#2CA84D', stations:['Shinjuku','Hatagaya','Sasazuka','Meidaimae','Shimo-takaido','Sakurajosui','Fuchu','Chofu','Hashimoto'] },
-  { name:'Tokyu Den-en-toshi Line', color:'#009944', stations:['Shibuya','Ikejiri-ohashi','Sangenjaya','Komazawa-daigaku','Yoga','Futako-tamagawa','Mizonokuchi','Nagatsuta','Chuo-rinkan'] },
-  { name:'Tokyo Metro Ginza Line',  color:'#FF9500', stations:['Shibuya','Omote-sando','Gaiemmae','Aoyama-itchome','Akasaka-mitsuke','Toranomon','Shimbashi','Ginza','Nihonbashi','Kanda','Ueno'] },
-  { name:'JR Yamanote Line',        color:'#80C241', stations:['Shinjuku','Yoyogi','Harajuku','Shibuya','Ebisu','Meguro','Gotanda','Osaki','Shinagawa','Hamamatsucho','Shimbashi','Yurakucho','Tokyo','Kanda','Akihabara','Ueno','Nippori','Ikebukuro','Takadanobaba'] },
-  { name:'Tokyo Metro Marunouchi Line', color:'#E60026', stations:['Ogikubo','Nishi-ogikubo','Higashi-koenji','Shin-koenji','Nakano-sakaue','Shinjuku','Shinjuku-sanchome','Yotsuya','Akasaka-mitsuke','Tokyo','Ginza','Shintomicho','Tsukishima'] },
-  { name:'Tobu Skytree Line',       color:'#F55C00', stations:['Asakusa','Hikifune','Kameido','Kinshicho','Tokyo-skytree','Oshiage'] },
+var LINES=[
+  {name:'Odakyu Line',color:'#0072BC',stations:['Shinjuku','Yoyogi-uehara','Shimokitazawa','Gotokuji','Kyodo','Chitose-funabashi','Atsugi','Odawara']},
+  {name:'Keio Line',color:'#2CA84D',stations:['Shinjuku','Hatagaya','Sasazuka','Meidaimae','Shimo-takaido','Fuchu','Chofu','Hashimoto']},
+  {name:'Tokyu Den-en-toshi Line',color:'#009944',stations:['Shibuya','Sangenjaya','Komazawa-daigaku','Yoga','Futako-tamagawa','Mizonokuchi','Nagatsuta','Chuo-rinkan']},
+  {name:'Tokyo Metro Ginza Line',color:'#FF9500',stations:['Shibuya','Omote-sando','Aoyama-itchome','Akasaka-mitsuke','Toranomon','Shimbashi','Ginza','Nihonbashi','Kanda','Ueno']},
+  {name:'JR Yamanote Line',color:'#80C241',stations:['Shinjuku','Harajuku','Shibuya','Ebisu','Meguro','Gotanda','Shinagawa','Hamamatsucho','Shimbashi','Tokyo','Kanda','Akihabara','Ueno','Nippori','Ikebukuro','Takadanobaba']},
 ];
 
-const SPOTS = {
+var SPOTS={
   explore:[
-    { name:'The Old Lantern Alley',     desc:'A narrow cobblestone passage most locals walk past without a second glance. Street art changes every few months.',         hint:'Look for the small cat mural at the entrance. If you see it, you\'re in the right place.',                     dlat:0.018, dlng:0.022 },
-    { name:'The Forgotten Shrine',      desc:'Tucked behind a convenience store, this tiny Shinto shrine predates the neighborhood by 300 years.',                       hint:'The stone fox on the left has an offering tray. A small coin is customary.',                                 dlat:0.025, dlng:-0.015 },
-    { name:'Rooftop of the Covered Market', desc:'Few people know the market has a rooftop via an unmarked staircase at the back. Views across the old quarter.',       hint:'Ask the vendor near the tea stall — they\'ll point you to the stairs if you smile.',                         dlat:-0.012, dlng:0.031 },
+    {name:'The Old Lantern Alley',desc:'A narrow cobblestone passage most locals walk past. Street art changes every few months.',hint:'Look for the small cat mural at the entrance.',dlat:.018,dlng:.022},
+    {name:'The Forgotten Shrine',desc:'Tucked behind a convenience store, 300 years old and completely unexpected.',hint:'The stone fox has an offering tray. A small coin is customary.',dlat:.025,dlng:-.015},
+    {name:'Rooftop of the Covered Market',desc:'A secret rooftop via an unmarked staircase at the back.',hint:'Ask the vendor near the tea stall to point you to the stairs.',dlat:-.012,dlng:.031},
   ],
   food:[
-    { name:'Mama Keiko\'s Counter',    desc:'No sign, no menu outside. Eight seats only. She\'s been making the same bowl of ramen for 40 years.',                        hint:'Open from 11am, cash only, usually sells out by 2pm. Go early.',                                             dlat:0.009, dlng:-0.019 },
-    { name:'The Basement Izakaya',     desc:'Below a dry cleaner on a quiet street. Just a noren curtain and a dim staircase. Best yakitori in the district.',            hint:'Ring the small bell by the curtain instead of knocking. That\'s how they know you\'re there.',               dlat:-0.021, dlng:0.014 },
-    { name:'The Grandmother Bakery',   desc:'Run by an 80-year-old woman from her home kitchen. Fresh melon pan and anpan, weekday mornings only.',                       hint:'She may offer you tea if you admire her garden. It would be rude to decline.',                               dlat:-0.007, dlng:-0.023 },
+    {name:"Mama Keiko's Counter",desc:'No sign. Eight seats. Best ramen. Cash only.',hint:'Open 11am, sells out by 2pm. Go early.',dlat:.009,dlng:-.019},
+    {name:'The Basement Izakaya',desc:'Below a dry cleaner. A noren curtain, dim stairs, best yakitori.',hint:'Ring the small bell by the curtain.',dlat:-.021,dlng:.014},
+    {name:'The Grandmother Bakery',desc:'Fresh melon pan from an 80-year-old home kitchen. Weekday mornings only.',hint:'She may offer you tea. It would be rude to decline.',dlat:-.007,dlng:-.023},
   ],
   relax:[
-    { name:'The Moss Garden Courtyard', desc:'Hidden behind a century-old wooden gate. This private-feeling garden belongs to a former merchant\'s estate.',              hint:'Best visited after light rain — the moss turns electric green.',                                              dlat:0.014, dlng:0.008 },
-    { name:'Platform 0 Café',          desc:'An old platform that was never used, converted into a small café. Trains run past every 15 minutes.',                        hint:'The far end of the platform has a bench with a perfect view and almost no foot traffic.',                    dlat:-0.008, dlng:-0.028 },
-    { name:'The Riverside Reading Nook', desc:'A small wooden deck built by locals at a bend in the river. Someone always leaves books on a little shelf.',               hint:'There\'s a freshwater turtle that lives under the dock. Look down between the planks.',                      dlat:0.022, dlng:-0.011 },
+    {name:'The Moss Garden Courtyard',desc:'Hidden behind an old wooden gate. Always quiet.',hint:'Best after light rain — the moss turns electric green.',dlat:.014,dlng:.008},
+    {name:'Platform 0 Café',desc:'An old unused platform turned café. Trains pass every 15 min.',hint:'The far end bench has a perfect view with no foot traffic.',dlat:-.008,dlng:-.028},
+    {name:'The Riverside Reading Nook',desc:'A small deck at a river bend. Books left by locals.',hint:"There's a turtle under the dock. Look between the planks.",dlat:.022,dlng:-.011},
   ],
   random:[
-    { name:'The Accordion Man\'s Corner', desc:'Every Thursday at 3pm, a retired postman plays accordion under a specific overpass. 30 years and still going.',          hint:'He plays requests if you write them on a slip of paper. He knows hundreds of songs.',                         dlat:0.031, dlng:0.011 },
-    { name:'Mirror House Alley',        desc:'A dead-end alley where someone has mounted hundreds of small mirrors on every surface. Otherworldly at golden hour.',       hint:'Best light: 4:30pm in summer, 3pm in winter.',                                                                dlat:-0.017, dlng:0.025 },
-    { name:'The Typewriter Museum',     desc:'A retired English teacher\'s private collection of 200+ typewriters, open on weekends. No website — you just have to know.', hint:'You\'re allowed to type on any of them. She keeps paper and ribbons stocked.',                             dlat:0.005, dlng:0.038 },
+    {name:"The Accordion Man's Corner",desc:'Every Thursday at 3pm, a retired postman plays accordion here.',hint:'He plays requests on paper slips. 30 years and still going.',dlat:.031,dlng:.011},
+    {name:'Mirror House Alley',desc:'Hundreds of mirrors. Otherworldly at golden hour.',hint:'Best light: 4:30pm summer, 3pm winter.',dlat:-.017,dlng:.025},
+    {name:'The Typewriter Museum',desc:'200+ typewriters, open weekends. No website.',hint:"You're allowed to type on any of them.",dlat:.005,dlng:.038},
   ],
 };
 
-/* ─── STATE ─── */
-let userLat = null, userLng = null;
-let spot    = null;
-let watchId = null;
-let simTimer= null;
-let prefs   = { transport:'walking', distance:5, time:90, vibe:'explore' };
+var prefs={transport:'walking',distance:5,time:90,vibe:'explore'};
+var userLat=null,userLng=null,spot=null,watchId=null,simTimer=null;
 
-/* ─── GEOLOCATION ─── */
-function startGeo() {
-  if (!navigator.geolocation) return setLocUI('error','Location not supported by this browser');
-  setLocUI('searching','Getting your location…');
+function pick(el,gid){
+  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  prefs.transport=el.dataset.val;
+}
+function pickV(el,gid){
+  document.querySelectorAll('#'+gid+' .vcard').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  prefs.vibe=el.dataset.val;
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startGeo(){
+  if(!navigator.geolocation){
+    setLoc('error','Location not supported');return;
+  }
+  setLoc('searching','Getting your location…');
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLat = pos.coords.latitude;
-      userLng = pos.coords.longitude;
-      setLocUI('ready', '📍 ' + userLat.toFixed(5) + ', ' + userLng.toFixed(5));
-    },
-    () => {
-      userLat = 35.4437; userLng = 139.3380;
-      setLocUI('ready','Demo location · Atsugi, Kanagawa');
-    },
-    { enableHighAccuracy:true, timeout:9000 }
+    function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;setLoc('ready','📍 '+userLat.toFixed(5)+', '+userLng.toFixed(5));},
+    function(){userLat=35.4437;userLng=139.3380;setLoc('ready','Demo location · Atsugi, Kanagawa');},
+    {enableHighAccuracy:true,timeout:9000}
   );
 }
-function setLocUI(state, msg) {
-  document.getElementById('loc-dot').className = 'loc-dot ' + state;
-  document.getElementById('loc-text').textContent = msg;
+function setLoc(state,msg){
+  document.getElementById('loc-dot').className='loc-dot '+state;
+  document.getElementById('loc-text').textContent=msg;
 }
 
-/* ─── FORM HELPERS ─── */
-function pickChip(el, gid) {
-  document.querySelectorAll('#'+gid+' .chip').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  prefs.transport = el.dataset.val;
-}
-function pickCard(el, gid) {
-  document.querySelectorAll('#'+gid+' .vibe-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  prefs.vibe = el.dataset.val;
-}
-function syncSlider(sid, vid, fmt) {
-  const v = document.getElementById(sid).value;
-  document.getElementById(vid).textContent = fmt(+v);
+var LMSGS=['Scanning nearby hidden spots','Checking locals\' favourites','Avoiding tourist traps','Finding something special…'];
+var lmi=0,lmt=null;
+
+function startAdventure(){
+  if(!userLat){userLat=35.4437;userLng=139.3380;}
+  showScreen('s-loading');
+  lmi=0;
+  document.getElementById('load-msg').textContent=LMSGS[0];
+  lmt=setInterval(function(){lmi=(lmi+1)%LMSGS.length;document.getElementById('load-msg').textContent=LMSGS[lmi];},900);
+  setTimeout(function(){
+    clearInterval(lmt);
+    var list=SPOTS[prefs.vibe]||SPOTS.explore;
+    spot=list[Math.floor(Math.random()*list.length)];
+    spot.lat=userLat+spot.dlat;
+    spot.lng=userLng+spot.dlng;
+    if(prefs.transport==='transit')showTransit();else showNav();
+  },2800);
 }
 
-/* ─── SCREEN TRANSITIONS ─── */
-const SCREENS = ['screen-setup','screen-loading','screen-nav','screen-transit','screen-arrived'];
-function showScreen(id) {
-  SCREENS.forEach(s => {
-    const el = document.getElementById(s);
-    el.classList.remove('active','behind');
-    if (s === id) el.classList.add('active');
-  });
+function hav(a,b,c,d){
+  var R=6371,r=Math.PI/180,dL=(c-a)*r,dG=(d-b)*r;
+  var x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dG/2)*Math.sin(dG/2);
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
-
-/* ─── LOADING ─── */
-const LOAD_MSGS = ['Scanning nearby hidden spots','Checking locals\' favourites','Avoiding tourist traps','Finding something special…'];
-let loadMsgIdx = 0, loadTimer = null;
-
-function startAdventure() {
-  if (!userLat) { userLat = 35.4437; userLng = 139.3380; }
-  showScreen('screen-loading');
-
-  loadMsgIdx = 0;
-  document.getElementById('loading-msg').textContent = LOAD_MSGS[0];
-  loadTimer = setInterval(() => {
-    loadMsgIdx = (loadMsgIdx + 1) % LOAD_MSGS.length;
-    document.getElementById('loading-msg').textContent = LOAD_MSGS[loadMsgIdx];
-  }, 900);
-
-  setTimeout(() => {
-    clearInterval(loadTimer);
-    const list = SPOTS[prefs.vibe] || SPOTS.explore;
-    spot = list[Math.floor(Math.random() * list.length)];
-    spot.lat = userLat + spot.dlat;
-    spot.lng = userLng + spot.dlng;
-    prefs.transport === 'transit' ? showTransit() : showNav();
-  }, 2800);
+function bear(a,b,c,d){
+  var r=Math.PI/180,dG=(d-b)*r;
+  var y=Math.sin(dG)*Math.cos(c*r),x=Math.cos(a*r)*Math.sin(c*r)-Math.sin(a*r)*Math.cos(c*r)*Math.cos(dG);
+  return(Math.atan2(y,x)*180/Math.PI+360)%360;
 }
+var DIRS=['North','Northeast','East','Southeast','South','Southwest','West','Northwest'];
+var HINTS=['along the main road','past the convenience store','through the park path','along the river walk','keep going straight','turn right at the corner','take the narrow side street','follow the canal path'];
 
-/* ─── MATH ─── */
-function haversine(a, b, c, d) {
-  const R = 6371, r = Math.PI/180;
-  const dLat = (c-a)*r, dLng = (d-b)*r;
-  const x = Math.sin(dLat/2)**2 + Math.cos(a*r)*Math.cos(c*r)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
-}
-function calcBearing(a, b, c, d) {
-  const r=Math.PI/180, dL=(d-b)*r;
-  const y=Math.sin(dL)*Math.cos(c*r);
-  const x=Math.cos(a*r)*Math.sin(c*r)-Math.sin(a*r)*Math.cos(c*r)*Math.cos(dL);
-  return (Math.atan2(y,x)*180/Math.PI+360)%360;
-}
-function bearingName(b) {
-  return ['North','Northeast','East','Southeast','South','Southwest','West','Northwest'][Math.round(b/45)%8];
-}
-const HINTS = ['along the main road','past the convenience store','through the park path','along the river walk','keep going straight','turn right at the corner','take the narrow side street','follow the canal path'];
-
-/* ─── NAV SCREEN ─── */
-function showNav() {
-  showScreen('screen-nav');
-  const icon = prefs.transport==='cycling' ? '🚲 Cycling' : '🚶 Walking';
-  document.getElementById('nm-mode').textContent = icon;
-  updateNav(userLat, userLng);
-  startWatch();
-}
-
-let simLat, simLng;
-function startWatch() {
+function showNav(){
+  showScreen('s-nav');
+  document.getElementById('nm-mode').textContent=(prefs.transport==='cycling'?'🚲 Cycling':'🚶 Walking');
+  updateNav(userLat,userLng);
   stopWatch();
-  if (navigator.geolocation) {
-    watchId = navigator.geolocation.watchPosition(
-      pos => { userLat=pos.coords.latitude; userLng=pos.coords.longitude; updateNav(userLat,userLng); },
-      ()   => startSim(),
-      { enableHighAccuracy:true, maximumAge:2000 }
+  if(navigator.geolocation){
+    watchId=navigator.geolocation.watchPosition(
+      function(p){userLat=p.coords.latitude;userLng=p.coords.longitude;updateNav(userLat,userLng);},
+      function(){startSim();},
+      {enableHighAccuracy:true,maximumAge:2000}
     );
-  } else {
-    startSim();
-  }
-}
-function startSim() {
-  simLat = userLat; simLng = userLng;
-  simTimer = setInterval(() => {
-    const b = calcBearing(simLat, simLng, spot.lat, spot.lng);
-    simLat += 0.00025 * Math.cos(b*Math.PI/180);
-    simLng += 0.00025 * Math.sin(b*Math.PI/180);
-    updateNav(simLat, simLng);
-  }, 1500);
-}
-function stopWatch() {
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  if (simTimer !== null) { clearInterval(simTimer); simTimer = null; }
+  }else{startSim();}
 }
 
-function updateNav(lat, lng) {
-  const dist  = haversine(lat, lng, spot.lat, spot.lng);
-  const bear  = calcBearing(lat, lng, spot.lat, spot.lng);
-  const spd   = prefs.transport==='cycling' ? 14 : 4.5;
-  const mins  = Math.max(1, Math.round(dist/spd*60));
-
-  /* arrow */
-  document.getElementById('big-arrow').style.transform = 'rotate('+bear+'deg)';
-  document.getElementById('dir-label').textContent = 'Head ' + bearingName(bear);
-  document.getElementById('street-hint').textContent = HINTS[Math.floor(bear/45)%HINTS.length];
-
-  /* distance badge */
-  if (dist > 1) {
-    document.getElementById('dist-num').textContent  = dist.toFixed(1);
-    document.getElementById('dist-unit').textContent = 'km';
-  } else {
-    document.getElementById('dist-num').textContent  = Math.round(dist*1000);
-    document.getElementById('dist-unit').textContent = 'm';
-  }
-
-  /* top meta */
-  document.getElementById('nm-dist').textContent = '📍 ' + dist.toFixed(2) + ' km';
-  document.getElementById('nm-time').textContent = '⏱ ~' + mins + ' min';
-
-  /* compass needle */
-  const nx = 30 + 22*Math.sin(bear*Math.PI/180);
-  const ny = 30 - 22*Math.cos(bear*Math.PI/180);
-  document.getElementById('c-needle').setAttribute('x2', nx.toFixed(1));
-  document.getElementById('c-needle').setAttribute('y2', ny.toFixed(1));
-
-  if (dist < 0.04) showArrived();
+var simLat,simLng;
+function startSim(){
+  simLat=userLat;simLng=userLng;
+  simTimer=setInterval(function(){
+    var b=bear(simLat,simLng,spot.lat,spot.lng);
+    simLat+=0.00025*Math.cos(b*Math.PI/180);
+    simLng+=0.00025*Math.sin(b*Math.PI/180);
+    updateNav(simLat,simLng);
+  },1500);
+}
+function stopWatch(){
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  if(simTimer!==null){clearInterval(simTimer);simTimer=null;}
 }
 
-/* ─── TRANSIT ─── */
-function showTransit() {
-  showScreen('screen-transit');
-  const line = LINES[Math.floor(Math.random()*LINES.length)];
-  const maxStart = Math.max(0, line.stations.length-4);
-  const si = Math.floor(Math.random()*maxStart);
-  const board  = line.stations[si];
-  const stops  = 2 + Math.floor(Math.random()*3);
-  const alight = line.stations[Math.min(si+stops, line.stations.length-1)];
-  const actualStops = line.stations.indexOf(alight) - line.stations.indexOf(board);
+function updateNav(lat,lng){
+  var dist=hav(lat,lng,spot.lat,spot.lng);
+  var b=bear(lat,lng,spot.lat,spot.lng);
+  var spd=prefs.transport==='cycling'?14:4.5;
+  var mins=Math.max(1,Math.round(dist/spd*60));
+  document.getElementById('big-arrow').style.transform='rotate('+b+'deg)';
+  document.getElementById('dir-label').textContent='Head '+DIRS[Math.round(b/45)%8];
+  document.getElementById('st-hint').textContent=HINTS[Math.floor(b/45)%8];
+  document.getElementById('d-num').textContent=dist>1?dist.toFixed(1):Math.round(dist*1000);
+  document.getElementById('d-unit').textContent=dist>1?'km':'m';
+  document.getElementById('nm-dist').textContent='📍 '+dist.toFixed(2)+' km';
+  document.getElementById('nm-time').textContent='⏱ ~'+mins+' min';
+  var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);
+  document.getElementById('c-needle').setAttribute('x2',nx.toFixed(1));
+  document.getElementById('c-needle').setAttribute('y2',ny.toFixed(1));
+  if(dist<0.04)showArrived();
+}
 
-  const walkTo   = 4 + Math.round(Math.random()*7);
-  const rideMin  = actualStops*2 + Math.round(Math.random()*3);
-  const walkFrom = 3 + Math.round(Math.random()*8);
-  const total    = walkTo + rideMin + walkFrom;
-
-  document.getElementById('tt-total').textContent = total + 'm';
-  document.getElementById('tt-walk').textContent  = (walkTo+walkFrom) + 'm';
-
-  const steps = [
-    { type:'walk',  icon:'🚶', title:'Walk to ' + board + ' Station',
-      sub: walkTo + ' min · About ' + Math.round(walkTo*80) + 'm from your location' },
-    { type:'train', icon:'🚃', title:'Take the ' + line.name,
-      sub: rideMin + ' min · ' + actualStops + ' stop' + (actualStops>1?'s':''),
-      line, board, alight },
-    { type:'walk',  icon:'🚶', title:'Walk to your secret destination',
-      sub: walkFrom + ' min · About ' + Math.round(walkFrom*80) + 'm from the exit' },
-    { type:'dest',  icon:'🗝️', title: spot.name,
-      sub: 'You\'ve arrived at your secret spot' },
+function showTransit(){
+  showScreen('s-transit');
+  var line=LINES[Math.floor(Math.random()*LINES.length)];
+  var si=Math.floor(Math.random()*Math.max(1,line.stations.length-4));
+  var board=line.stations[si];
+  var stops=2+Math.floor(Math.random()*3);
+  var alight=line.stations[Math.min(si+stops,line.stations.length-1)];
+  var ac=line.stations.indexOf(alight)-line.stations.indexOf(board);
+  var wTo=4+Math.round(Math.random()*7);
+  var ride=ac*2+Math.round(Math.random()*3);
+  var wFrom=3+Math.round(Math.random()*8);
+  var tot=wTo+ride+wFrom;
+  document.getElementById('tt-tot').textContent=tot+'m';
+  document.getElementById('tt-wlk').textContent=(wTo+wFrom)+'m';
+  var steps=[
+    {type:'walk',icon:'🚶',title:'Walk to '+board+' Station',sub:wTo+' min · About '+Math.round(wTo*80)+'m away'},
+    {type:'train',icon:'🚃',title:'Take the '+line.name,sub:ride+' min · '+ac+' stop'+(ac>1?'s':''),line:line,board:board,alight:alight},
+    {type:'walk',icon:'🚶',title:'Walk to your secret destination',sub:wFrom+' min · About '+Math.round(wFrom*80)+'m from exit'},
+    {type:'dest',icon:'🗝️',title:spot.name,sub:"You've arrived at your secret spot"},
   ];
-
-  const container = document.getElementById('transit-steps');
-  container.innerHTML = '';
-  steps.forEach((s, i) => {
-    const div = document.createElement('div');
-    div.className = 't-step';
-
-    let iconStyle = '';
-    if (s.type==='train') iconStyle = `border-color:${s.line.color}; background:${s.line.color}20;`;
-
-    let html = `<div class="t-step-line"></div>
-      <div class="t-icon ${s.type==='train'?'train':s.type==='dest'?'dest':'walk'}" style="${iconStyle}">${s.icon}</div>
-      <div class="t-content">
-        <div class="t-title">${s.title}</div>
-        <div class="t-sub">${s.sub}</div>`;
-
-    if (s.type==='train') {
-      html += `
-        <div class="line-pill" style="background:${s.line.color}18; color:${s.line.color};">
-          <div class="line-dot" style="background:${s.line.color};"></div>${s.line.name}
-        </div>
-        <div class="station-card">
-          <div><div class="station-name">🚉 ${s.board}</div><div class="station-line-ref">Board here</div></div>
-          <div class="station-badge badge-on">Get on ↑</div>
-        </div>
-        <div class="station-card" style="margin-top:8px;">
-          <div><div class="station-name">🚉 ${s.alight}</div><div class="station-line-ref">Get off here</div></div>
-          <div class="station-badge badge-off">Get off ↓</div>
-        </div>`;
+  var c=document.getElementById('tr-steps');c.innerHTML='';
+  steps.forEach(function(s,i){
+    var d=document.createElement('div');d.className='tstep';
+    var is=s.type==='train'?'border-color:'+s.line.color+';background:'+s.line.color+'20;':'';
+    var ic=s.type==='train'?'train':s.type==='dest'?'dest':'walk';
+    var h='<div class="tstep-line"></div><div class="ticon '+ic+'" style="'+is+'">'+s.icon+'</div><div class="tc"><div class="tc-title">'+s.title+'</div><div class="tc-sub">'+s.sub+'</div>';
+    if(s.type==='train'){
+      h+='<div class="lpill" style="background:'+s.line.color+'18;color:'+s.line.color+';"><div class="ldot" style="background:'+s.line.color+';"></div>'+s.line.name+'</div>';
+      h+='<div class="scard"><div><div class="sname">🚉 '+s.board+'</div><div class="sref">Board here</div></div><div class="sbadge bon">Get on ↑</div></div>';
+      h+='<div class="scard" style="margin-top:8px;"><div><div class="sname">🚉 '+s.alight+'</div><div class="sref">Get off here</div></div><div class="sbadge boff">Get off ↓</div></div>';
     }
-    html += '</div>';
-    div.innerHTML = html;
-    container.appendChild(div);
+    h+='</div>';d.innerHTML=h;c.appendChild(d);
   });
 }
 
-/* ─── ARRIVED ─── */
-function showArrived() {
+function showArrived(){
   stopWatch();
-  showScreen('screen-arrived');
-  document.getElementById('arr-spot').textContent = spot ? spot.name : '';
-  document.getElementById('arr-hint').textContent = spot ? spot.hint : '';
+  showScreen('s-arrived');
+  document.getElementById('arr-spot').textContent=spot?spot.name:'';
+  document.getElementById('arr-hint').textContent=spot?spot.hint:'';
 }
+function goBack(){stopWatch();showScreen('s-setup');}
 
-/* ─── BACK ─── */
-function goBack() {
-  stopWatch();
-  showScreen('screen-setup');
-}
-
-/* ─── INIT ─── */
 startGeo();
 </script>
 </body>
