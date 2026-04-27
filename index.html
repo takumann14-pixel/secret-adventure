@@ -143,7 +143,7 @@ body.ja{font-family:'Noto Sans JP',sans-serif}
 .compass-bg{position:absolute;inset:0;transition:transform .12s linear;}
 .compass-bg svg{width:100%;height:100%;}
 .big-arrow{position:absolute;transition:transform .45s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 30px rgba(255,217,61,.35));}
-.big-arrow.live{transition:transform .1s linear;}
+.big-arrow.live{transition:transform .08s linear;}
 .arrow-svg{width:110px;height:110px;}
 
 .nav-labels{display:flex;flex-direction:column;align-items:center;gap:.5rem;margin-top:1rem;}
@@ -922,7 +922,7 @@ function startAdventure(){
 }
 
 // ======== PLACES API ========
-var PLACES_KEY='AIzaSyCzpdUU9rm_-z_O2XIGs5tOJeSl0o0ZUDA'; //
+var PLACES_KEY=''; AIzaSyCzpdUU9rm_-z_O2XIGs5tOJeSl0o0ZUDA//
 
 // vibe × companion → Places API type list
 var PLACE_TYPES={
@@ -976,48 +976,67 @@ function pickSpot(callback){
   st.textContent=lang==='ja'?'近くの場所を検索中…':'Searching nearby spots…';
 
   var type=getPlaceTypes();
-  var radius=Math.min(prefs.distance*1000, 50000); // max 50km
-  var url='https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-    +'?location='+userLat+','+userLng
-    +'&radius='+radius
-    +'&type='+type
-    +'&language='+(lang==='ja'?'ja':'en')
-    +'&key='+PLACES_KEY;
+  var radius=Math.min(prefs.distance*1000, 50000);
 
-  // Use proxy via cors-anywhere or direct (will fail CORS on some browsers)
-  // Recommended: use Places JS SDK instead
-  fetch('https://cors-anywhere.herokuapp.com/'+url)
-  .then(function(r){return r.json();})
-  .then(function(data){
-    ov.classList.add('hidden');
-    if(data.results&&data.results.length>0){
-      // Filter: skip chains/well-known, prefer lower rating count (hidden gems)
-      var results=data.results.filter(function(p){
-        return p.rating&&p.user_ratings_total<500; // hidden gem: fewer reviews
-      });
-      if(!results.length) results=data.results;
-      // Pick random from top results
-      var pick=results[Math.floor(Math.random()*Math.min(results.length,10))];
-      spot={
-        lat:pick.geometry.location.lat,
-        lng:pick.geometry.location.lng,
-        en:{name:pick.name,desc:pick.vicinity||'A hidden local spot',hint:'Rated '+pick.rating+'★ with '+pick.user_ratings_total+' reviews'},
-        ja:{name:pick.name,desc:pick.vicinity||'地元の隠れスポット',hint:'評価 '+pick.rating+'★（'+pick.user_ratings_total+'件）'},
-        placeId:pick.place_id,
-        photoRef:pick.photos?pick.photos[0].photo_reference:null,
-      };
-      callback();
-    } else {
-      pickSpotFallback();
-      callback();
-    }
-  })
-  .catch(function(e){
-    console.warn('Places API failed, using fallback',e);
-    ov.classList.add('hidden');
-    pickSpotFallback();
-    callback();
-  });
+  // Google Maps JS SDK の PlacesService を使う
+  if(typeof google==='undefined'||!google.maps||!google.maps.places){
+    // SDKがまだロードされていない → ロード後に再試行
+    loadMapsSDK(function(){
+      doPlacesSearch(type, radius, ov, callback);
+    });
+  } else {
+    doPlacesSearch(type, radius, ov, callback);
+  }
+}
+
+
+function loadMapsSDK(cb){
+  if(typeof google!=='undefined'&&google.maps){ cb(); return; }
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+PLACES_KEY+'&libraries=places&language='+(typeof lang!=='undefined'?lang:'ja');
+  s.async=true;
+  s.onload=cb;
+  s.onerror=function(){ cb(); }; // 失敗してもcallbackは呼ぶ
+  document.head.appendChild(s);
+}
+
+function doPlacesSearch(type, radius, ov, callback){
+  try{
+    var mapDiv=document.createElement('div');
+    var map=new google.maps.Map(mapDiv,{center:{lat:userLat,lng:userLng},zoom:15});
+    var service=new google.maps.places.PlacesService(map);
+    service.nearbySearch({
+      location:{lat:userLat,lng:userLng},
+      radius:radius,
+      type:type,
+      language:lang
+    }, function(results,status){
+      ov.classList.add('hidden');
+      if(status===google.maps.places.PlacesServiceStatus.OK&&results&&results.length>0){
+        // 隠れた名所フィルタ: レビュー数が少ない＝知られていない場所を優先
+        var gems=results.filter(function(p){
+          return p.user_ratings_total&&p.user_ratings_total<300&&p.rating&&p.rating>=3.5;
+        });
+        var pool=gems.length>=3?gems:results;
+        var pick=pool[Math.floor(Math.random()*Math.min(pool.length,8))];
+        var loc=pick.geometry.location;
+        spot={
+          lat:typeof loc.lat==='function'?loc.lat():loc.lat,
+          lng:typeof loc.lng==='function'?loc.lng():loc.lng,
+          en:{name:pick.name,desc:pick.vicinity||'A hidden local spot',hint:'Rated '+( pick.rating||'?')+'★ · '+( pick.user_ratings_total||0)+' reviews'},
+          ja:{name:pick.name,desc:pick.vicinity||'地元の隠れスポット',hint:'評価 '+(pick.rating||'?')+'★（'+(pick.user_ratings_total||0)+'件のレビュー）'},
+          placeId:pick.place_id,
+        };
+        callback();
+      } else {
+        pickSpotFallback(); callback();
+      }
+    });
+  } catch(e){
+    console.warn('Places search error:',e);
+    if(ov) ov.classList.add('hidden');
+    pickSpotFallback(); callback();
+  }
 }
 
 function pickSpotFallback(){
@@ -1046,7 +1065,8 @@ function bear(a,b,c,d){
 }
 
 // ============ NAV + COMPASS ============
-var compassHeading=null;      // スマホが向いている方向(0-360, 北=0)
+var compassHeading=null;
+var arrivalCount=0;      // スマホが向いている方向(0-360, 北=0)
 var compassActive=false;
 var deviceOrientHandler=null;
 var destBearing=0;            // 目的地への方位角
@@ -1076,38 +1096,55 @@ function startCompass(){
   var st=document.getElementById('cmp-status');
   var lbl=document.getElementById('cmp-label');
   if(deviceOrientHandler) window.removeEventListener('deviceorientation',deviceOrientHandler,true);
+  var _rafPending=false;
   deviceOrientHandler=function(e){
     var heading=null;
     if(e.webkitCompassHeading!=null){
-      heading=e.webkitCompassHeading;           // iOS: 真北基準
+      heading=e.webkitCompassHeading;
     } else if(e.absolute&&e.alpha!=null){
-      heading=(360-e.alpha)%360;               // Android absolute
+      heading=(360-e.alpha)%360;
     } else if(e.alpha!=null){
       heading=(360-e.alpha)%360;
     }
     if(heading==null) return;
-    // スムージング
+
+    // ① 初回
     if(compassHeading==null){ compassHeading=heading; }
     else {
       var diff=heading-compassHeading;
       if(diff>180) diff-=360;
       if(diff<-180) diff+=360;
-      compassHeading=compassHeading+diff*0.2;
+
+      // ② 飛び値フィルタ: 90度以上の急変は無視（センサーバグ）
+      if(Math.abs(diff)>90) return;
+
+      // ③ 微小変化フィルタ: 3度未満は更新しない（ノイズ）
+      if(Math.abs(diff)<3) return;
+
+      // ④ 強い慣性スムージング（係数0.08 = ゆっくり追従）
+      compassHeading=compassHeading+diff*0.08;
       if(compassHeading<0) compassHeading+=360;
       if(compassHeading>=360) compassHeading-=360;
     }
-    compassActive=true;
-    st.className='cmp-status active';
-    lbl.textContent=lang==='ja'?'コンパス ON':'Compass ON';
-    document.getElementById('big-arrow').classList.add('live');
 
-    // コンパス盤をスマホの向きと逆に回転（北が常に上に見える）
-    var compassBg=document.getElementById('compass-bg');
-    if(compassBg) compassBg.style.transform='rotate('+((-compassHeading+360)%360)+'deg)';
+    if(!compassActive){
+      compassActive=true;
+      st.className='cmp-status active';
+      lbl.textContent=lang==='ja'?'コンパス ON':'Compass ON';
+      document.getElementById('big-arrow').classList.add('live');
+    }
 
-    // 矢印 = 目的地方位 - スマホ向き
-    var arrowAngle=(destBearing-compassHeading+360)%360;
-    document.getElementById('big-arrow').style.transform='rotate('+arrowAngle+'deg)';
+    // ⑤ requestAnimationFrameで描画を間引く（60fps上限）
+    if(_rafPending) return;
+    _rafPending=true;
+    requestAnimationFrame(function(){
+      _rafPending=false;
+      var compassBg=document.getElementById('compass-bg');
+      if(compassBg) compassBg.style.transform='rotate('+((-compassHeading+360)%360)+'deg)';
+      var arrowAngle=(destBearing-compassHeading+360)%360;
+      var arrowEl=document.getElementById('big-arrow');
+      if(arrowEl) arrowEl.style.transform='rotate('+arrowAngle+'deg)';
+    });
   };
   window.addEventListener('deviceorientation',deviceOrientHandler,true);
   // 1.5秒後にセンサーが来なければ「センサーなし」
@@ -1147,6 +1184,8 @@ function showNav(){
     var gpsRetries=0;
     watchId=navigator.geolocation.watchPosition(
       function(p){
+        // 精度50m超の値は無視（GPSが安定していない）
+        if(p.coords.accuracy>50&&userLat) return;
         gpsRetries=0;
         userLat=p.coords.latitude;
         userLng=p.coords.longitude;
@@ -1181,6 +1220,7 @@ function stopWatch(){
   if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
   if(simTimer!==null){clearInterval(simTimer);simTimer=null;}
   stopCompass();
+  arrivalCount=0;
 }
 
 function updateNav(lat,lng){
@@ -1213,7 +1253,13 @@ function updateNav(lat,lng){
     var distTxt=dist>1?dist.toFixed(1)+'km':Math.round(dist*1000)+'m';
     dname.textContent=lang==='ja'?distTxt+' 先に秘密の場所':distTxt+' to your secret spot';
   }
-  if(dist<0.04)showArrived();
+  // 到着判定: 15m以内に3回連続で入ったら到着（誤検知防止）
+  if(dist<0.015){
+    arrivalCount=(arrivalCount||0)+1;
+    if(arrivalCount>=3) showArrived();
+  } else {
+    arrivalCount=0;
+  }
 }
 
 // ============ TRANSIT STEP NAV ============
@@ -1419,7 +1465,13 @@ function trUpdateWalk(lat,lng,target,onArrive){
   el=document.getElementById('tr-time'); if(el) el.textContent='⏱ ~'+mins+(lang==='ja'?'分':' min');
   var needle=document.getElementById('tr-needle');
   if(needle){var nx=30+22*Math.sin(b*Math.PI/180),ny=30-22*Math.cos(b*Math.PI/180);needle.setAttribute('x2',nx.toFixed(1));needle.setAttribute('y2',ny.toFixed(1));}
-  if(dist<0.04 && onArrive){stopWatch();onArrive();}
+  // 到着判定: 15m以内に3回連続
+  if(dist<0.015){
+    window._trArrCount=(window._trArrCount||0)+1;
+    if(window._trArrCount>=3){ window._trArrCount=0; stopWatch(); onArrive(); }
+  } else {
+    window._trArrCount=0;
+  }
 }
 
 // ============ ARRIVED ============
