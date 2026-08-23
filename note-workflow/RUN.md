@@ -19,6 +19,20 @@
 
 3. **03 執筆**：`03-writing/prompt.md` に従い、採用1本を4,000字＋有料境界設計 →
    `output/{DATE}/03-draft.md`。
+   **04に渡す前に必ず字数を実測する**（空白除く本文・有料境界で分割）：
+   ```bash
+   python3 -c "
+   import re,sys
+   b=open(sys.argv[1]).read().split('---',2)[2].split('## 検品ログ')[0]
+   f,p=b.split('<!-- 💰 有料境界 -->')
+   f,p=len(re.sub(r'\s','',f)),len(re.sub(r'\s','',p))
+   print('合計',f+p,'/ 無料',f,f'({round(f*100/(f+p))}%)')
+   print('字数ゲート:','PASS' if 3600<=f+p<=4400 else 'FAIL')
+   print('無料比ゲート:','PASS' if 35<=f*100/(f+p)<=45 else 'FAIL')
+   " output/{DATE}/03-draft.md
+   ```
+   FAILなら**この時点で**増補/圧縮して直す（検品後に直すと二度手間になる）。
+   増補は具体例・実体験の追加で行い、一般論の水増しはしない。
 
 4. **04 検品**：`04-qa/prompt.md` に従い、AIっぽさ除去 → `output/{DATE}/04-final.md`。
 

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="670" viewBox="0 0 1280 670" font-family="'Noto Sans JP','Hiragino Sans',sans-serif">
+  <rect width="1280" height="670" fill="#0F0E17"/>
+
+  <!-- 上：小さく前置き -->
+  <text x="640" y="150" text-anchor="middle" font-size="34" font-weight="400" fill="#FFFFFF" opacity="0.6">4,000字の原稿に</text>
+
+  <!-- 中央：極大数字が主役 -->
+  <text x="620" y="400" text-anchor="middle" font-size="240" font-weight="700" fill="#FF6B6B" letter-spacing="-8">17</text>
+  <text x="770" y="400" text-anchor="start" font-size="72" font-weight="500" fill="#FFFFFF">回</text>
+
+  <!-- 説明 -->
+  <text x="640" y="470" text-anchor="middle" font-size="30" font-weight="400" fill="#FFFFFF" opacity="0.85">AIが顔を出していた回数</text>
+
+  <line x1="520" y1="520" x2="760" y2="520" stroke="#FFD93D" stroke-width="3"/>
+
+  <text x="640" y="580" text-anchor="middle" font-size="27" font-weight="500" fill="#FFFFFF" opacity="0.55">AIっぽさを消す8つの置換ルール</text>
+</svg>

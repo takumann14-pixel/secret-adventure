@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="670" viewBox="0 0 1280 670" font-family="'Noto Sans JP','Hiragino Sans',sans-serif">
+  <!-- 右：本体 -->
+  <rect width="1280" height="670" fill="#FAFAF8"/>
+
+  <!-- 左：固定の濃色帯（シリーズ共通・ここは毎回変えない） -->
+  <rect width="320" height="670" fill="#0F0E17"/>
+  <text x="160" y="300" text-anchor="middle" font-size="48" font-weight="400" fill="#FFD93D" opacity="0.7">#</text>
+  <text x="160" y="400" text-anchor="middle" font-size="150" font-weight="700" fill="#FFD93D" letter-spacing="-4">01</text>
+  <text x="160" y="620" text-anchor="middle" font-size="20" font-weight="400" fill="#FFFFFF" opacity="0.45">AIと書く技術</text>
+
+  <!-- 右：可変タイトル（2本目以降はここと番号だけ差し替え） -->
+  <text x="390" y="270" font-size="72" font-weight="700" fill="#1A1A1A">AI臭を</text>
+  <text x="390" y="360" font-size="72" font-weight="700" fill="#1A1A1A">消す技術</text>
+
+  <line x1="390" y1="420" x2="500" y2="420" stroke="#FFD93D" stroke-width="5"/>
+
+  <text x="390" y="480" font-size="27" font-weight="400" fill="#666">8つの症状と、私が全部潰した</text>
+  <text x="390" y="520" font-size="27" font-weight="400" fill="#666">置換ルール</text>
+</svg>
