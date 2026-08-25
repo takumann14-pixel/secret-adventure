@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="670" viewBox="0 0 1280 670">
+  <rect width="1280" height="670" fill="#0B1F3A"/>
+  <rect x="0" y="0" width="1280" height="110" fill="#0B1F3A" stroke="#F5C518" stroke-width="4"/>
+  <text x="640" y="70" text-anchor="middle" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="34" font-weight="700" fill="#F5C518">AIと私の分業ログ</text>
+  <rect x="140" y="180" width="1000" height="330" fill="none" stroke="#F5C518" stroke-width="3"/>
+  <text x="640" y="330" text-anchor="middle" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="40" font-weight="700" fill="#FFFFFF">{差し込みタイトル}</text>
+  <text x="640" y="390" text-anchor="middle" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="22" fill="#8FA8C7">ここに号ごとのタイトルを差し替える</text>
+  <text x="1160" y="600" text-anchor="end" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="28" font-weight="700" fill="#F5C518">#1</text>
+</svg>
